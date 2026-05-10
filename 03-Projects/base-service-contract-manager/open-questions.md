@@ -14,13 +14,10 @@ Questions Justin needs to answer, questions the agent needs to verify, and quest
 
 ## Questions for Justin
 
-### Q1 — SC v7 Field Storage Location 🔴 HIGH PRIORITY
-**Question:** SC v7 form fields (`lifts_covered`, `visits_per_year`, `full_day_rate`, `per_hour_rate`, `minimum_call_out`) are currently stored in the portal's `sc_forms` SQLite table. Staff cannot see or edit them in the ServiceM8 app.
-Should these fields also be stored as SM8 task/checklist fields (via `POST /task.json`) so staff can view/edit them in SM8?
-**Original spec:** Fields as SM8 task/checklist fields
-**Current implementation:** Portal DB only
-**Impact:** Staff workflow; whether portal needs to call SM8 task API
-**Waiting on:** Justin
+### Q1 — SC v7 Field Storage Location ✅ ANSWERED
+**Decision:** Store SC v7 fields in portal `sc_forms` SQLite table only. NOT in SM8 task/checklist fields.
+**Reasoning:** Staff workflow is portal-first. SM8 task fields not required.
+**Confirmed by:** Justin (2026-05-10)
 
 ---
 
@@ -235,7 +232,7 @@ If they crash, does anyone get alerted?
 
 | # | Question | Priority | Waiting On |
 |---|---------|---------|-----------|
-| Q1 | SC v7 field storage location | 🔴 HIGH | Justin |
+| Q1 | SC v7 field storage location | ✅ ANSWERED | Justin |
 | Q2 | Renewal rejection path | 🔴 HIGH | Justin |
 | Q3 | Badge count scope | 🟡 MEDIUM | Justin |
 | Q4 | Re-initiating renewal | 🟡 MEDIUM | Justin |

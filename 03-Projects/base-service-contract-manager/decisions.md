@@ -66,10 +66,11 @@ tags: [decisions, design-decisions]
 **Decision:** Implement 7-step workflow: New Contract → Contract & Invoice → Approve Email → Invoice Send → Initiate or Chase → Contract Renewal → Renewal Approval.
 **Source:** Justin's New_automated_Service_Contract_Process_Desired.docx
 
-### SC v7 Fields (2026-04-25) — Partial
+### SC v7 Fields (2026-04-25) — CONFIRMED
 **Decision:** 5 SC v7 form fields: `lifts_covered`, `visits_per_year`, `full_day_rate`, `per_hour_rate`, `minimum_call_out`.
-**Location:** Stored in portal `sc_forms` table. Originally planned as SM8 task/checklist fields.
-**Status:** Confirmed with Justin 2026-04-25. Storage location (portal DB vs SM8 task) needs final confirmation.
+**Location:** Stored in portal `sc_forms` SQLite table only. NOT in SM8 task/checklist fields.
+**Reasoning:** Staff workflow is portal-first. Fields are visible and editable in the portal. SM8 task fields are not required.
+**Confirmed by:** Justin (2026-05-10)
 **Source:** Justin, SC workflow walkthrough
 
 ### CPI Rate: 3.3% (March 2026)

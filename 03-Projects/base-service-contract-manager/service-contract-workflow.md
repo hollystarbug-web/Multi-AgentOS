@@ -106,7 +106,7 @@ Job appears in the Contract & Invoice queue after Step 1.
 
 **Calculated:** `annual_value = visits_per_year × full_day_rate`
 
-**⚠️ Storage note:** SC v7 fields are stored in the portal's `sc_forms` table. The original spec called for storing them as SM8 task/checklist fields. This was not implemented. Fields remain in portal DB only. **Clarification needed: should they sync to SM8 task fields so staff can view/edit in SM8 app?**
+**Storage:** SC v7 fields are stored in the portal's `sc_forms` SQLite table only. NOT in SM8 task/checklist fields. Confirmed by Justin (2026-05-10) — portal-first is sufficient.
 
 ### What the System Does
 1. Updates `sc_forms` record with SC v7 fields
