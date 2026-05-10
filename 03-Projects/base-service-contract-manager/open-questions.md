@@ -48,11 +48,10 @@ Options considered:
 
 ---
 
-### Q5 — Nginx Proxy Destination 🔴 IMPORTANT
-**Question:** Is nginx on VPS currently proxying `dashboard.baselifts.co.uk` to the local `/root/portal` (port 3000) or to Vercel?
-This was set to local `/root/portal` on April 28. May have been changed.
-**Impact:** Which portal code is serving the custom domain
-**Waiting on:** Justin
+### Q5 — Nginx Proxy Destination ✅ ANSWERED
+**Decision:** nginx proxies `dashboard.baselifts.co.uk` to `http://127.0.0.1:3000` — local `/root/portal` (PM2).
+**Vercel:** Serves `.vercel.app` preview URLs only. Not in the path for `dashboard.baselifts.co.uk`.
+**Confirmed by:** `cat /etc/nginx/sites-available/portal` (2026-05-10)
 
 ---
 
@@ -236,7 +235,7 @@ If they crash, does anyone get alerted?
 | Q2 | Renewal rejection path | 🔴 HIGH | Justin |
 | Q3 | Badge count scope | 🟡 MEDIUM | Justin |
 | Q4 | Re-initiating renewal | 🟡 MEDIUM | Justin |
-| Q5 | Nginx proxy destination | 🔴 HIGH | Justin |
+| Q5 | Nginx proxy destination | ✅ ANSWERED | Verified |
 | Q6 | Clerk auth stability | 🟡 MEDIUM | Justin |
 | Q7 | Who does SC admin | 🟡 MEDIUM | Justin |
 | Q8 | SC SLA / response time | 🟢 LOW | Justin |
@@ -245,7 +244,7 @@ If they crash, does anyone get alerted?
 | Q11 | DocuSign integration | 🟡 MEDIUM | Justin |
 | Q12 | Renewal category sync | 🟡 MEDIUM | Monitor |
 | Q13 | SM8 custom field names | 🟡 MEDIUM | Agent |
-| Q14 | approval_queue schema | 🟡 MEDIUM | Agent |
+| Q14 | approval_queue schema | ✅ VERIFIED | Agent |
 | Q15 | previous_price usage | 🟢 LOW | Justin |
 | Q16 | SC exclusion scope | 🟢 LOW | Justin |
 | Q17 | Portal user roles | 🟡 MEDIUM | Justin |

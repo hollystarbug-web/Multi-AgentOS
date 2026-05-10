@@ -179,6 +179,44 @@ tags: [bugs, issues]
 
 ---
 
+---
+
+## Security Issues
+
+### SECURITY #001 — ecosystem.config.js with Secrets in Repository 🔴 CRITICAL
+**Date:** 2026-05-10
+**Severity:** Critical
+**Status:** DELETED — needs security review
+**Found by:** Holly during verification checks
+
+**Description:** A file `ecosystem.config.js` was found as an untracked file in `/root/portal/`. This file is a PM2 configuration containing:
+- Clerk secret key
+- Clerk webhook secret
+- ServiceM8 OAuth email: `hollystarbug@gmail.com`
+- ServiceM8 OAuth password: `Reddwarf2026!`
+
+**Why critical:** These credentials are the same as the production OAuth tokens used by the portal to send emails and interact with ServiceM8 on behalf of users.
+
+**Action taken:**
+1. File DELETED from `/root/portal`
+2. Added `ecosystem.config.js` to `.gitignore`
+3. Not committed to git (was untracked)
+
+**⚠️ Risk:** The file may have existed in `/root/portal` for some time. If it was ever staged or committed to the git repository, the secrets are in the git history of `hollystarbug-web/BaseSC_dashboard`.
+
+**Security review needed:**
+1. Check git history of `/root/portal` for any committed secrets: `git log --all --source --remotes -- ecosystem.config.js`
+2. Run a secret scanner: `git ls-files | xargs grep -l "sk_test_\|sk_live_\|Reddwarf2026"`
+3. Rotate all credentials found: Clerk keys, SM8 OAuth tokens
+4. Update PM2 to use environment variables from a secure source (e.g. `.env` file not in git)
+5. Consider using a secrets manager instead of environment variables in PM2 config
+
+**Files affected:** `hollystarbug-web/BaseSC_dashboard` (GitHub repo)
+
+**Lesson:** Never leave credential files in project directories, even as untracked files. Use `.gitignore` from the start. Use a secrets manager or `.env` files that are explicitly excluded from git.
+
+---
+
 ## Last Updated
 
 `2026-05-10`

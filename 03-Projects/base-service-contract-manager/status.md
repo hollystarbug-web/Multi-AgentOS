@@ -19,8 +19,8 @@ tags: [project, status]
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Portal UI (dashboard.baselifts.co.uk) | ✅ Online | Served via nginx → Vercel (or local /root/portal) |
-| Portal API (VPS:3001) | ✅ Online | PM2 process `portal-api` |
+| Portal UI (dashboard.baselifts.co.uk) | ✅ Online | Served via nginx → local /root/portal port 3000 (PM2) |
+| Portal API (VPS:3001) | ✅ Online | PM2 process `portal-api` (26 restarts — monitoring) |
 | SQLite DB (/tmp/portal.db) | ✅ Healthy | WAL mode, shared by portal + API |
 | SM8 Sync (1-min cron) | ⚠️ Partial | Syncs SC jobs; renewal jobs fetched live by portal |
 | Clerk Auth | ⚠️ Session may expire | Requires re-login if session stale |
@@ -58,6 +58,10 @@ tags: [project, status]
 
 ### Critical (Fixed — Needs Verification)
 - **sc-forms INSERT bug** — `POST /api/sc-form` had wrong number of parameter placeholders. Fixed in `/root/portal-api/server.js`. PM2 restarted. Bas-4529 (DVB Capital Assets II LLC) manually recovered. Needs end-to-end test with a real new contract.
+- **Git drift** — `/root/portal` was 2 commits behind `workspace-sally/portal`. Synced 2026-05-10. Fixed job_address bugs in buildClientList and getInitiateJobs. Rebuilt and PM2 restarted.
+
+### Security Issues
+- **ecosystem.config.js with secrets** — File containing Clerk keys, SM8 OAuth credentials was found as untracked file in `/root/portal`. DELETED and added to `.gitignore`. ⚠️ Secrets may be in git history of this repo. Needs security review.
 
 ### Unverified
 - **End-to-end new contract flow** — Step 1 → Step 2 → Submit → Approve Email → Invoice Send has not been tested live with a real client
@@ -65,16 +69,15 @@ tags: [project, status]
 - **INITIATE checklist** — creates recurring job in SM8; needs testing
 - **Please Chase flow** — contact info displayed, email triggered
 - **Badge counts** on tab buttons — may not be live-counting correctly
-- **Renewal invoice category** (`a04b781f-047f-4db4-9872-241accbf1f8b`) — not in sync script; portal fetches live; renewal jobs may be missed in mirror queries
+- **portal-api restarts** — 26 restarts counted; may be normal (cron overlapping) or may indicate instability
 
 ---
 
 ## Current Blockers
 
 1. **No live end-to-end test** — full SC workflow has not been tested with a real client from New Contract → Initiate
-2. **SM8 checklist/task fields** — SC v7 form fields (`lifts_covered`, `visits_per_year`, etc.) are stored in portal DB, NOT in SM8 task/checklist system. The original spec said they should go into SM8 task fields. This needs clarification.
-3. **Renewal category not in sync** — `a04b781f-047f-4db4-9872-241accbf1f8b` jobs not synced to `/tmp/portal.db` by sync script
-4. **DB schema inconsistency** — `server.js` (VPS API) and `db.ts` (Next.js) both write to `/tmp/portal.db` but `approval_queue` column `invoicing_address` is added via migration in `db.ts` but not in `server.js`
+2. **SC v7 field storage** — Stored in portal DB only. SM8 task fields not required. ✅ ANSWERED 2026-05-10
+3. **approval_queue schema** — `invoicing_address` column exists in production DB. ✅ VERIFIED 2026-05-10
 
 ---
 

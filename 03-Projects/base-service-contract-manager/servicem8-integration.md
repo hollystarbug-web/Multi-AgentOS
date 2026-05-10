@@ -83,6 +83,55 @@ GET /job.json?$filter=queue_uuid%20eq%20'{queue_uuid}'&cursor=-1
 | SC Standard | `6d2fd47f-4ae0-4041-8cc0-22e739804a6b` | New service contracts |
 | SC Renewal Invoice | `a04b781f-047f-4db4-9872-241accbf1f8b` | Renewal quotes/invoices |
 
+## SC Auto Queues (Created April 25, 2026)
+
+Justin requested workflow queues for each SC stage. All created via SM8 API:
+
+| Queue Name | UUID | SC Workflow Stage |
+|-----------|------|------------------|
+| SC Auto New | `85b22b6b-c526-4144-a3ce-241dcf57b4ab` | New Contract created |
+| SC Auto Cntr+Inv | `3c5d63d4-8886-4872-81a9-241dcc5eeb6b` | Contract & Invoice (SC v7 form) |
+| SC Auto Approve | `84c5edd7-351d-49e7-8299-241dc0625a3b` | Approve Email |
+| SC Auto Invoice | `76b0514a-0d89-42ad-a27e-241dcdae499b` | Invoice Send |
+| SC Auto Initiate | `a00be0b9-5295-42a0-b635-241dc56ae88b` | Initiate or Chase |
+| SC Auto Renew | `d330ce67-ae11-4c1d-9354-241dcd5c193b` | Contract Renewal |
+
+**Note:** Portal may not yet link jobs to these queues. Queue logic may be handled differently in the current portal implementation. Verification needed.
+
+## Badges
+
+| Badge | UUID | Effect |
+|-------|------|--------|
+| 1 Year Follow-up | `141b2dd2-a608-4303-9bfd-224d6533a0ab` | Triggers renewal reminder + auto-creates recurring yearly job in SM8 |
+| contract | `12938cfd-1db9-4d47-a3ee-22d9d8637e2b` | Triggers SC V7 form/checklist to appear on job card |
+| VIP | `d410b594-c477-456a-b187-22443ce1fd3b` | Manual VIP marker |
+| Warranty | `228c489b-577c-41d7-b521-22443dd9780b` | Standard warranty badge |
+
+## SC V7 Form
+
+| Field | Value |
+|-------|-------|
+| Form UUID | `ce793bdc-d51b-4639-8313-22d9d48d342b` |
+| Badge name | `contract` |
+| Active | Yes (active=1) |
+
+**Fields (21 total, 10 fillable):**
+Service Contract Type (radio), Number of visits per year, Notes, Price Per Service, Price Per Loler, Lifts Covered, Full Day rate, Per Hour rate, Minimum Call Out, Total to Invoice per Annum, Base Lift Staff Member, Date, Serial Plate Photo 1-5, Additional photo fields.
+
+**Note:** Form submission via API not possible (no write endpoint for form field values). Photo upload fields cannot be automated. Form opens in iframe within SM8 job card.
+
+## FormResponse Endpoint (Contract Received Detection)
+
+```
+GET /FormResponse.json?$filter=regarding_object_uuid eq '{job_uuid}'
+```
+
+Returns form submissions for a job. The `document_attachment_uuid` field points to the signed contract PDF attachment.
+
+**Usage:** Portal uses this to detect `contract_received = true` at Step 4.
+
+**Limitation:** If client signed outside the portal integrated flow, the signed PDF may be in the job diary as a `note.json` attachment rather than a FormResponse.
+
 ---
 
 ## Diary Attachment Process (Contract PDF Detection)
