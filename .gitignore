@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Credentials and secrets
+credentials/
+*.json
+*.key
+*.pem
+*.token
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*.swp
+*~
+
+# OpenClaw
+.openclaw/
