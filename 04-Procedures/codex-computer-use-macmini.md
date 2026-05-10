@@ -197,7 +197,7 @@ ssh holly@100.91.33.1 \
 ```bash
 ssh holly@100.91.33.1 \
   "/Applications/Codex.app/Contents/MacOS/Codex \
-    --search 'open Google Chrome and navigate to https://qbo.intuit.com. Log in with debt_recovery@baselifts.co.uk and Reddwarf2026!. Click on Banking, then click the first account to expand it.' \
+    --search 'open Google Chrome and navigate to https://qbo.intuit.com. Log in with [QB_EMAIL] and [QB_PASSWORD]. Click on Banking, then click the first account to expand it.' \
     --ask-for-approval never"
 ```
 
@@ -229,7 +229,7 @@ ssh holly@100.91.33.1 \
 ```bash
 ssh holly@100.91.33.1 \
   "/Applications/Codex.app/Contents/MacOS/Codex \
-    --search 'look at the screen. If there is a login page for any app, log in using the appropriate credentials. If ServiceM8 is on the login screen, use justin.howard@silverbrookcm.com and Reddwarf2026!. If QuickBooks, use debt_recovery@baselifts.co.uk and Reddwarf2026!.' \
+    --search 'look at the screen. If there is a login page for any app, log in using the appropriate credentials. If ServiceM8 is on the login screen, use [SM8_EMAIL] and [SM8_PASSWORD]. If QuickBooks, use [QB_EMAIL] and [QB_PASSWORD].' \
     --ask-for-approval never"
 ```
 
@@ -309,10 +309,10 @@ Codex sees whatever is displayed on the Mac Mini's screen via Screen Sharing. It
 
 | App | Username | Password |
 |-----|----------|----------|
-| ServiceM8 | justin.howard@silverbrookcm.com | Reddwarf2026! |
-| QuickBooks | debt_recovery@baselifts.co.uk | Reddwarf2026! |
-| Gmail/Chrome | justin.howard@silverbrookcm.com | Reddwarf2026! |
-| DocuSign | justin.howard@silverbrookcm.com | Reddwarf2026! |
+| ServiceM8 | [SM8_EMAIL] | [SM8_PASSWORD] |
+| QuickBooks | [QB_EMAIL] | [QB_PASSWORD] |
+| Gmail/Chrome | [GMAIL_EMAIL] | [GMAIL_PASSWORD] |
+| DocuSign | [DOCUSIGN_EMAIL] | [DOCUSIGN_PASSWORD] |
 
 ---
 

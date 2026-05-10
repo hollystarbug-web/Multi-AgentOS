@@ -193,7 +193,7 @@ tags: [bugs, issues]
 - Clerk secret key
 - Clerk webhook secret
 - ServiceM8 OAuth email: `hollystarbug@gmail.com`
-- ServiceM8 OAuth password: `Reddwarf2026!`
+- ServiceM8 OAuth password: [REDACTED]
 
 **Why critical:** These credentials are the same as the production OAuth tokens used by the portal to send emails and interact with ServiceM8 on behalf of users.
 

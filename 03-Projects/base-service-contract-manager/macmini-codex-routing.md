@@ -20,7 +20,7 @@ tags: [mac-mini, codex, browser, automation]
 
 **SSH:** `holly@100.91.33.1`
 **VNC:** VPS localhost:5900 → Mac Mini Screen Sharing
-**Password:** Reddwarf2026!
+**Auth:** SSH key + password — credentials in `~/.openclaw/workspace/.credentials/`
 
 ## Browser Automation Options
 

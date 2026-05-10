@@ -14,7 +14,7 @@ ServiceM8 is the **source of truth** for all job and client data. The portal's S
 
 ## API Access
 
-**API Key:** `smk-4457bf-5dba51feb84ada3a-b34852e9afbff3c7`
+**API Key:** [SM8_API_KEY]
 **Base URL:** `https://api.servicem8.com/api_1.0`
 
 ### Authentication — Two Methods

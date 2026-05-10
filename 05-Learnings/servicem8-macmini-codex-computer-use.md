@@ -8,7 +8,7 @@
 
 - **Mac Mini SSH**: `holly@100.91.33.1` (Tailscale)
 - **VPS**: `root@204.168.251.149` (Hetzner, ubuntu-16gb-hel1-1)
-- **ServiceM8 credentials**: justin.howard@silverbrookcm.com / Reddwarf2026!
+- **ServiceM8 credentials**: [SM8_EMAIL] / [SM8_PASSWORD]
 - **Chrome debug port**: localhost:9222 (Mac Mini)
 - **agent-browser**: `/opt/homebrew/bin/agent-browser` (Mac Mini)
 - **Codex binary**: `/Applications/Codex.app/Contents/MacOS/Codex`

@@ -77,7 +77,7 @@ tags: [changelog, history]
 ### QB CDP Login — Working
 **Who:** Holly
 **Discovery:** QB sign-in has a pre-filled email BUTTON (not a text field). Must click the button first, then fill password. QB password step says "Continue" not "Sign in".
-**Credentials:** `debt_recovery@baselifts.co.uk / Reddwarf2026!`
+**Credentials:** Stored in `~/.openclaw/workspace/.credentials/quickbooks-debt-recovery.json`
 
 ---
 

@@ -126,7 +126,7 @@ Syncs FROM SM8 TO SQLite:
 
 ### ServiceM8 Integration
 
-**API Key:** `smk-4457bf-5dba51feb84ada3a-b34852e9afbff3c7`
+**API Key:** [SM8_API_KEY]
 **Base URL:** `https://api.servicem8.com/api_1.0`
 
 **Two access methods:**
@@ -197,9 +197,9 @@ Syncs FROM SM8 TO SQLite:
 | Service | Account | Access Method |
 |---------|---------|--------------|
 | ServiceM8 | justin.howard@silverbrookcm.com | Chrome session (Mac Mini) |
-| QuickBooks | debt_recovery@baselifts.co.uk | Chrome session (Mac Mini) |
+| QuickBooks | [QB_EMAIL] | Chrome session (Mac Mini) |
 | Gmail/Chrome | justin.howard@silverbrookcm.com | Chrome session (Mac Mini) |
-| ServiceM8 API | `smk-4457bf-...` | Direct API calls |
+| ServiceM8 API | [SM8_API_KEY] | Direct API calls |
 
 ## File Locations
 
