@@ -2,6 +2,7 @@
 title: Base Service Contract Manager — Status
 project: Base Service Contract Manager
 created: 2026-05-10
+updated: 2026-05-10
 tags: [project, status]
 ---
 
@@ -10,32 +11,81 @@ tags: [project, status]
 ## Current State
 
 **Date:** 2026-05-10
+**Build phase:** Core workflow functional, polish and monitoring pending
 
-### Active Work
+---
 
-- **SC Portal Bug Fix:** Fixed a critical bug in the VPS API's `POST /api/sc-form` INSERT statement where the prepared statement had the wrong number of parameter placeholders. The INSERT was failing silently, causing the SM8 job to be created but the portal DB record to be missing.
-  - **Fix:** Corrected the VALUES clause to match 29 table columns
-  - **Fixed file:** `/root/portal-api/server.js`
-  - **Restarted:** portal-api PM2 service
-  - **Recovery:** Manually inserted missing sc_forms record for Bas-4529 (DVB Capital Assets II LLC)
+## System Health
 
-- **Wiki Setup:** Initializing OpenClaw wiki on VPS at ~/OpenClaw-Wiki/
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Portal UI (dashboard.baselifts.co.uk) | ✅ Online | Served via nginx → Vercel (or local /root/portal) |
+| Portal API (VPS:3001) | ✅ Online | PM2 process `portal-api` |
+| SQLite DB (/tmp/portal.db) | ✅ Healthy | WAL mode, shared by portal + API |
+| SM8 Sync (1-min cron) | ⚠️ Partial | Syncs SC jobs; renewal jobs fetched live by portal |
+| Clerk Auth | ⚠️ Session may expire | Requires re-login if session stale |
+| Chrome CDP (Mac Mini) | ✅ Live | Tab 8B77F0A5A19CC9D32B7090C06EB4996C |
+| QB CDP | ✅ Live | Tab 6D8251B13C4D77646C82F7B2DBF7279B |
 
-### Portal Health
+---
 
-| Component | Status |
-|-----------|--------|
-| Portal UI (dashboard.baselifts.co.uk) | ✅ Online |
-| Portal API (VPS:3001) | ✅ Online |
-| SQLite DB (/tmp/portal.db) | ✅ Healthy |
-| SM8 Sync (1-min cron) | ✅ Running |
-| Clerk Auth | ⚠️ Session may expire — requires re-login |
+## What's Working
 
-### Open Items
+### Complete
+- **4-tab dashboard layout** — Pipeline, Awaiting Payment, Active/Initiated, Renewals
+- **Dashboard metrics** — Live Contracts, Annual Revenue, Renewals Due, Invoices Unpaid, Quotes Sent Unanswered
+- **Labour rates card** — stored in portal_settings
+- **New Contract** → creates SM8 job via API
+- **Contract & Invoice** (SC v7 form) → saves to portal DB, moves to approval queue
+- **Approve Email** → human reviews and sends via SM8
+- **Invoice Send** — tracks quote accepted (payment_received=1) + contract received
+- **Initiate SC** — creates recurring job via SM8 API
+- **Renewals window** — lists contracts due within 6 weeks
+- **Stale Quotes** — detects quotes older than 45 days
+- **SM8 API integration** — direct API calls for live data, SQLite mirror for speed
+- **SC sync cron** — sm8_jobs, sm8_companies, sm8_company_contacts synced every ~1 min
+- **SM8 OAuth** — email/SMS sending via OAuth token (auto-refreshes)
 
-- [ ] Clerk auth session may need refreshing on portal — monitor
-- [ ] DVB Bas-4529 needs SC v7 checklist filled in (lifts covered, rates, etc.)
-- [ ] Wiki documentation for SC workflow needs to be written up
+### Partial
+- **Renewals list** — shows contracts in renewal window but RENEW flow not fully end-to-end verified
+- **SC Exclusion List** — applied in db.ts KPIs, may not be applied in all list queries
+- **Diary attachment detection** — portal checks for contract PDF in SM8 job diary (Step 4 detection)
+- **Signed contract PDF** — goes to ORIGINAL job diary, not renewal diary (confirmed with Justin)
+
+---
+
+## What's Broken
+
+### Critical (Fixed — Needs Verification)
+- **sc-forms INSERT bug** — `POST /api/sc-form` had wrong number of parameter placeholders. Fixed in `/root/portal-api/server.js`. PM2 restarted. Bas-4529 (DVB Capital Assets II LLC) manually recovered. Needs end-to-end test with a real new contract.
+
+### Unverified
+- **End-to-end new contract flow** — Step 1 → Step 2 → Submit → Approve Email → Invoice Send has not been tested live with a real client
+- **RENEW button flow** — creates renewal job with CPI price; needs testing
+- **INITIATE checklist** — creates recurring job in SM8; needs testing
+- **Please Chase flow** — contact info displayed, email triggered
+- **Badge counts** on tab buttons — may not be live-counting correctly
+- **Renewal invoice category** (`a04b781f-047f-4db4-9872-241accbf1f8b`) — not in sync script; portal fetches live; renewal jobs may be missed in mirror queries
+
+---
+
+## Current Blockers
+
+1. **No live end-to-end test** — full SC workflow has not been tested with a real client from New Contract → Initiate
+2. **SM8 checklist/task fields** — SC v7 form fields (`lifts_covered`, `visits_per_year`, etc.) are stored in portal DB, NOT in SM8 task/checklist system. The original spec said they should go into SM8 task fields. This needs clarification.
+3. **Renewal category not in sync** — `a04b781f-047f-4db4-9872-241accbf1f8b` jobs not synced to `/tmp/portal.db` by sync script
+4. **DB schema inconsistency** — `server.js` (VPS API) and `db.ts` (Next.js) both write to `/tmp/portal.db` but `approval_queue` column `invoicing_address` is added via migration in `db.ts` but not in `server.js`
+
+---
+
+## Next Safest Action
+
+1. **Test the full SC workflow with a real or test client** — starting with New Contract and working through to Initiate or Chase. This will validate the entire flow and expose any remaining bugs.
+2. **Clarify SC v7 field storage** — portal DB vs SM8 task fields
+3. **Add renewal category to sync script** — or verify portal live fetches are sufficient
+4. **Fix `invoicing_address` column** in `server.js` schema
+
+---
 
 ## Metrics (Last Check: 2026-05-10)
 
@@ -46,6 +96,8 @@ tags: [project, status]
 | Renewals Invoice Due | 6 |
 | Invoices Unpaid | 32 |
 | Quotes Sent Unanswered | 15 |
+
+---
 
 ## Last Updated
 
