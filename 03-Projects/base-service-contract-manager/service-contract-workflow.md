@@ -8,6 +8,12 @@ tags: [workflow, service-contract, sc]
 
 # Service Contract Workflow
 
+## How Base Lift Services SCs Should Flow
+
+A service contract (SC) at Base Lift Services follows a 7-step lifecycle from initial enquiry through to active contract and renewal. The portal tracks each contract through this lifecycle. The system is designed so that no email, invoice, or quote goes out without human review and explicit approval.
+
+---
+
 ## 7-Step SC Lifecycle
 
 ```
@@ -15,7 +21,7 @@ NEW CONTRACT
     ↓
 CONTRACT & INVOICE → submit for approval
     ↓
-APPROVE EMAIL → human reviews, approve and send
+APPROVE EMAIL → human reviews → APPROVE AND SEND
     ↓
 INVOICE SEND → [quote accepted?] + [contract received?] → SEND INVOICE
     ↓
@@ -23,182 +29,438 @@ INITIATE OR CHASE → PAID: INITIATE | NOT PAID: PLEASE CHASE
     ↓
 (recurring job running in SM8)
     ↓
-CONTRACT RENEWAL (6-week window) → RENEW → creates new job
+CONTRACT RENEWAL (6-week window) → RENEW → creates renewal job
     ↓
-RENEWAL APPROVAL → human reviews, approve and send
+RENEWAL APPROVAL → human reviews → APPROVE AND SEND
     ↓
 [back to INVOICE SEND]
 ```
 
 ---
 
-## Step 1 — New Contract
+## Step 1 — New Contract (Contract Creation)
 
-**Who:** Staff (via SC Portal)
-**Portal action:** Click "New Contract" → fill form
-**What happens:**
-1. Staff fills: customer name, address, job description, contact details, lead source
-2. Press Enter / Submit → job created in ServiceM8 via API
-3. `sc_forms` record saved to portal DB with status = `draft`
-4. Job appears in Step 2 queue
+### Trigger
+Staff receives an enquiry or identifies a new potential SC client. They create a new contract in the portal.
 
-**Fields collected:**
-- Company name
-- Contact name
-- Contact email
-- Contact phone
-- Lead source (Impact Automation or Impact Automation 10%)
-- Job description
+### What Staff Does
+1. Opens the SC Portal → clicks **New Contract**
+2. Fills in the portal form:
+   - Customer/company name
+   - Site address
+   - Job description (nature of service required)
+   - Contact name
+   - Contact email
+   - Contact phone
+   - Lead source (`Impact Automation` or `Impact Automation 10%`)
+3. Presses Enter / Submit
 
-**Output:** SM8 job created (Quote status, SC category), `sc_forms` record saved
+### What the System Does
+1. Creates a new **Job** in ServiceM8 via SM8 REST API
+   - Job status: **Quote**
+   - Category: SC Standard (`6d2fd47f-4ae0-4041-8cc0-22e739804a6b`)
+   - Job ID format: `Bas-XXXX`
+2. Saves a new `sc_forms` record in the portal's SQLite DB
+   - Status: `draft`
+   - Fields: company name, contact details, job description, lead source
+3. The job appears in the **Contract & Invoice** queue (Step 2)
+
+### Who Does What
+| Actor | Action |
+|-------|--------|
+| Staff | Fills portal form, submits |
+| System | Creates SM8 job, saves sc_forms record |
+
+### Output
+- SM8 Job created (Quote, SC category)
+- `sc_forms` record saved with `status = draft`
+- Job moves to Step 2 queue
 
 ---
 
-## Step 2 — Contract & Invoice
+## Step 2 — Contract & Invoice (SC v7 Form + Internal Review)
 
-**Who:** Staff (via SC Portal)
-**Portal action:** Fill SC v7 form → SUBMIT FOR APPROVAL
-**What happens:**
-1. Staff fills SC v7 pricing fields (see below)
-2. Annual value calculated: `visits_per_year × full_day_rate`
-3. SUBMIT FOR APPROVAL → `sc_forms` record updated, status → `pending_review`
-4. `approval_queue` entry created with proposed price
-5. Job moves to Approve Email step
+### Trigger
+Job appears in the Contract & Invoice queue after Step 1.
 
-**SC v7 Form Fields:**
+### What Staff Does
+1. Opens the job in the portal (Contract & Invoice tab)
+2. Fills in the **SC v7 pricing form**:
+   - Number of lifts at site
+   - Visits per year
+   - Full day rate (£)
+   - Per hour rate (£)
+   - Minimum callout charge (£)
+3. System calculates `annual_value = visits_per_year × full_day_rate`
+4. Staff clicks **SUBMIT FOR APPROVAL**
 
-| Field | Type | Notes |
-|-------|------|-------|
-| lifts_covered | integer | Number of lifts at site |
-| visits_per_year | integer | Service frequency (e.g. 2) |
-| full_day_rate | currency (£) | Full day rate |
-| per_hour_rate | currency (£) | Per hour rate |
+### SC v7 Form Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| lifts_covered | integer | Number of lifts covered by the contract |
+| visits_per_year | integer | Planned service frequency (e.g. 2 = twice-yearly) |
+| full_day_rate | currency (£) | Full day labour rate |
+| per_hour_rate | currency (£) | Per hour rate for additional work |
 | minimum_callout | currency (£) | Minimum callout charge |
 
-**Calculated field:**
-- `annual_value` = `visits_per_year × full_day_rate`
+**Calculated:** `annual_value = visits_per_year × full_day_rate`
 
-**⚠️ Storage note:** SC v7 fields are stored in the portal's `sc_forms` table. Originally planned as SM8 task/checklist fields; actual implementation stores in portal DB. (Confirmation needed: should they sync to SM8 task fields?)
+**⚠️ Storage note:** SC v7 fields are stored in the portal's `sc_forms` table. The original spec called for storing them as SM8 task/checklist fields. This was not implemented. Fields remain in portal DB only. **Clarification needed: should they sync to SM8 task fields so staff can view/edit in SM8 app?**
 
-**Output:** Form data saved, approval queue entry created, moves to Approve Email
+### What the System Does
+1. Updates `sc_forms` record with SC v7 fields
+2. Sets `status = pending_review`
+3. Creates an entry in `approval_queue` with:
+   - `proposed_price = annual_value`
+   - `previous_price = 0` (new contract)
+   - `status = pending_review`
+4. Job moves to the Approve Email queue
 
----
+### Internal Review
+Before a quote is sent to a client, someone internally (Justin or senior staff) reviews the SC v7 form in the portal. This is the **internal review gate** — no pricing or contract details go to the client without approval.
 
-## Step 3 — Approve Email
+### Edge Cases — Step 2
 
-**Who:** Justin or staff (human review)
-**Portal action:** Review email preview → APPROVE AND SEND
-**What happens:**
-1. Human reviews quote email preview with Quote PDF + Service Contract PDF
-2. CC list: `696d5a@inbox.servicem8.com` + `caz.h@baselifts.co.uk`
-3. APPROVE AND SEND → email sent to client via ServiceM8
-4. `approval_queue` status → `approved` → `sent`
-5. `sc_forms` status → `sent`
+| Situation | Handling |
+|-----------|----------|
+| Wrong customer selected | Delete the draft form; start again with correct customer |
+| Pricing needs changing | Staff updates fields in portal before submitting |
+| Customer cancels enquiry | Job stays in SM8; mark as Unsuccessful (Justin only) |
+| Staff not sure on pricing | Hold in draft; seek guidance before submitting |
+| Duplicate job created | Do not delete; mark as Unsuccessful in SM8 (Justin only) |
 
-**Email detection for automation:** Email sent via SM8 API using OAuth. Portal monitors `payment_received = 1` via SM8 API poll.
-
-**Output:** Email sent to client, approval queue updated
-
----
-
-## Step 4 — Invoice Send
-
-**Who:** System / Staff (automated detection)
-**Portal action:** Track quote accepted + contract received → SEND INVOICE
-**Detection logic:**
-- **Quote accepted:** SM8 API `payment_received = 1` (payment received in SM8)
-- **Contract received:** PDF attached to job diary in ServiceM8
-
-**⚠️ Important:** Signed contract PDF goes to the **ORIGINAL job diary**, NOT the renewal job diary.
-
-**Conditions:**
-- Both YES → SEND INVOICE button appears green → auto-send
-- One or both NO → manual chase required
-
-**Output:** Invoice sent to client
+### Output
+- `sc_forms` status → `pending_review`
+- `approval_queue` entry created
+- Job in Approve Email queue
 
 ---
 
-## Step 5 — Initiate or Chase
+## Step 3 — Approve Email (Human Review + Client Authorisation Begins)
 
-**Who:** Staff
-**Portal action:** Paid → INITIATE checklist | Not paid → PLEASE CHASE
+### Trigger
+Job appears in the Approve Email queue.
 
-### If PAID → INITIATE
+### What the Approver Does
+1. Opens the approval item in the portal
+2. Reviews the email preview showing:
+   - Quote PDF (generated by SM8 from job data)
+   - Service Contract PDF (from job diary — **must be attached to SM8 job diary first**)
+3. Checks CC list:
+   - `696d5a@inbox.servicem8.com` (ServiceM8 inbox for portal access)
+   - `caz.h@baselifts.co.uk` (Caz, admin)
+   - Logged-in staff member
+4. If satisfied: clicks **APPROVE AND SEND**
+5. If not satisfied: edits or rejects
 
-**Portal action:** Click INITIATE → guided checklist
+### What the System Does (on APPROVE AND SEND)
+1. Sends email to client via **SM8 Job Communication API** (OAuth required)
+2. Updates `approval_queue` status → `sent`
+3. Updates `sc_forms` status → `sent`
+4. Job status in SM8 remains **Quote** (not yet a contract)
 
-**Initiate checklist (manual in SM8):**
-1. Change job status to Completed
-2. Set `customfield_followup_basis` = "1 Year"
-3. Create recurring job in SM8:
-   - Frequency: Custom → Monthly interval = `12 ÷ visits_per_year` (e.g. 6 for twice-yearly)
+### Client Authorisation
+The client receives an email containing:
+- Quote PDF (pricing for the service contract)
+- Service Contract PDF (the legal/terms document)
+
+The client signs the Service Contract PDF and returns it to Base Lift Services. This can happen via:
+1. **Integrated signing** (e.g. DocuSign — if configured in SM8)
+2. **Manual return** — client signs, prints, scans/emails back, or uses a signing platform
+
+### Email Rules (Strict)
+- All emails require human review before sending
+- No auto-send from agent
+- CC: ServiceM8 inbox + Caz + logged-in staff
+- Attachments: Quote PDF + Service Contract PDF (from SM8 job diary)
+
+### Edge Cases — Step 3
+
+| Situation | Handling |
+|-----------|----------|
+| Contract PDF not yet in SM8 diary | **Do not send** — attach PDF to job diary first (see Diary Attachment process below) |
+| Wrong pricing in email | Reject approval; correct SC v7 form; resubmit |
+| Client requests changes before signing | Cancel current quote; create new job with corrected details |
+| Staff unsure if contract PDF is current | Check job diary in SM8; upload latest version |
+
+### Output
+- Email sent to client
+- `approval_queue` status → `sent`
+- Client has the quote and contract document to review and sign
+
+---
+
+## Diary Attachment Process (Contract Document Upload)
+
+### How the Signed Contract Gets Into ServiceM8
+
+The Service Contract PDF must be attached to the SM8 job diary for:
+1. The Approve Email step to attach it as an email PDF
+2. Step 4 (Invoice Send) to detect that the client has signed
+
+### Standard Flow
+1. Client signs the Service Contract PDF (DocuSign or manual)
+2. Signed PDF comes back to Base Lift Services (email or signing platform download)
+3. Staff opens the SM8 job → Job Diary
+4. Staff uploads the signed PDF as a diary attachment (type: Document)
+5. Portal can now detect it at Step 4
+
+### Fallback When Client Signs Outside Integrated Workflow
+If the client signs the contract without using the portal's integrated signing:
+1. Staff receives signed PDF via email or other means
+2. Staff uploads PDF to the **original SM8 job diary** (not a renewal job diary)
+3. Portal detects PDF in job diary → `contract_received = true`
+4. Invoice Send step proceeds
+
+**⚠️ Critical:** Signed contract goes to the **original SC job diary**, NOT the renewal job diary. Portal's Step 4 detection checks the original job.
+
+### How Portal Detects Contract Received
+Portal calls SM8 `/note.json` filtered by `related_object_uuid = job_uuid` and checks for attachments with `type = "Document"`. If found, `contract_received = true`.
+
+### What Happens If PDF Is Missing at Step 3
+The portal must prevent sending the Approve Email without the Service Contract PDF attached. If the PDF is missing, the approver should hold the approval and upload the correct document first.
+
+---
+
+## Step 4 — Invoice Send (Tracking Client Signature)
+
+### Trigger
+Portal monitors SM8 for two signals on each sent quote:
+
+| Signal | Source | Detection |
+|--------|--------|-----------|
+| Quote accepted (payment received) | SM8 API | `payment_received = 1` on the job |
+| Contract received (client signed) | SM8 job diary | PDF attachment detected |
+
+### What the System Does
+1. Polls SM8 API every time the portal is accessed (or on a schedule)
+2. Checks `payment_received` field on the SC job
+3. Checks job diary for PDF attachment
+4. Updates portal's `contract_received` flag
+
+### Decision Table
+
+| payment_received | contract_received | Action |
+|-----------------|-------------------|--------|
+| YES | YES | **SEND INVOICE** button appears (green) — auto-send on access |
+| YES | NO | Manual chase — client has paid but not signed |
+| NO | YES | Manual chase — client has signed but not paid |
+| NO | NO | No action — awaiting both |
+
+### What Happens on SEND INVOICE
+1. System creates an invoice in SM8 via API (or prepares it for staff to send)
+2. Invoice sent to client via SM8
+3. Job moves to Step 5
+
+### Invoice Send Detection Logic
+```
+IF quote_accepted == true AND contract_received == true:
+    → Show SEND INVOICE button (green / auto-send)
+ELIF quote_accepted == true AND contract_received == false:
+    → Show "Client paid but hasn't signed" + contact details
+ELIF quote_accepted == false AND contract_received == true:
+    → Show "Contract signed but not paid" + contact details
+ELSE:
+    → Awaiting both
+```
+
+### Edge Cases — Step 4
+
+| Situation | Handling |
+|-----------|----------|
+| Client paid but contract not signed | Follow up: "We received your payment — please return signed contract" |
+| Contract signed but not paid | Follow up: payment request |
+| Client signs but sends a different document | Staff must verify the PDF is the correct signed contract |
+| Payment received before contract sent | Flag for review — contract must be sent before payment is accepted |
+| Job has no diary attachments | Check with staff — contract may need uploading |
+| Client disputes contract terms after signing | Escalate to Justin — do not proceed to invoice without his instruction |
+
+---
+
+## Step 5 — Initiate or Chase (Follow-Up + Contract Activation)
+
+### Trigger
+Invoice has been sent (Step 4 complete).
+
+### Path A — PAID → INITIATE
+
+Client has paid. The contract is now active. Staff must set it up as a recurring service contract in SM8.
+
+**Portal action:** Click **INITIATE** → guided checklist
+
+**Initiate Checklist (3 steps in SM8):**
+1. Change job status to **Completed**
+2. Set `customfield_followup_basis = "1 Year"`
+3. Create a **Recurring Job** in SM8:
+   - Frequency: Custom → Monthly interval = `12 ÷ visits_per_year` (e.g. 6 for twice-yearly, 4 for quarterly, 3 for four-times-yearly)
    - Start date: contract signing date
    - Ends: Never
    - Recurring type: "Reminder should arrive in inbox"
-4. Job moves to Active/Initiated tab
+   - Subject: "Not Applicable" (or appropriate description)
 
-**Automated via portal:** `initiateServiceContract()` in `db.ts` handles all three via SM8 API.
+**Automated via portal:** `initiateServiceContract()` function in `db.ts` handles all three steps via SM8 API simultaneously.
 
-### If NOT PAID → PLEASE CHASE
+After initiation, the job moves to the **Active/Initiated** tab and the recurring reminders are running in SM8.
 
-**Portal action:** Click PLEASE CHASE → follow-up process
-**Portal shows:** contact person, telephone, email
-**Action:** Staff sends follow-up email via SM8
+**Renewal tracking:** The `customfield_contract_renewal_date` on the company record in SM8 determines when the contract comes up for renewal (typically 1 year from signing).
+
+### Path B — NOT PAID → PLEASE CHASE
+
+Client has not paid. Staff must follow up.
+
+**Portal action:** Click **PLEASE CHASE** → shows:
+- Contact person name
+- Telephone number
+- Email address
+
+**Follow-up actions available to staff:**
+- Send a payment reminder email via SM8
+- Call the client
+- Escalate to Justin if payment is disputed or client is unresponsive
+
+### Follow-Up Rules
+- All follow-up emails must go through ServiceM8 (logged in the job diary)
+- CC `accounts@baselifts.co.uk` on payment follow-up emails
+- If client disputes the invoice, escalate immediately — do not chase aggressively
+
+### Edge Cases — Step 5
+
+| Situation | Handling |
+|-----------|----------|
+| Client disputes invoice amount | Escalate to Justin; do not mark as paid |
+| Client on a payment plan | Mark as per agreement; update portal notes |
+| Client says they already paid | Verify in SM8 payments; update `payment_received` |
+| Client wants to cancel | Escalate to Justin; do not initiate |
+| Recurring job creation fails | Retry; if persistent, create manually in SM8 |
+| Wrong visit frequency in recurring job | Edit recurring job in SM8 |
 
 ---
 
-## Step 6 — Contract Renewal
+## Step 6 — Contract Renewal (6-Week Renewal Window)
 
-**Who:** System (automated monitoring) + Staff
-**Portal action:** 6 weeks before renewal date → RENEW button
-**What happens:**
-1. Job appears in Renewals tab when `renewal_date` is within 6 weeks
-2. Staff clicks RENEW
-3. Renewal job created in SM8 (type: SC Renewal Invoice category)
-4. Job status: Quote
-5. Invoice description includes:
+### Trigger
+The portal shows contracts in the **Renewals** tab when the `renewal_date` is within **6 weeks**.
+
+### What the Portal Does
+1. Queries SM8 for all active SC jobs
+2. Filters to jobs where `renewal_date` (from company `customfield_contract_renewal_date`) is within 6 weeks
+3. Shows each contract with:
+   - Company name
+   - Previous contract value
+   - Proposed renewal price (previous price × 1.033, i.e. +3.3% CPI)
+   - Renewal date
+   - Days until renewal
+
+### CPI Rate
+**Current rate: 3.3%** (March 2026, ONS)
+- Source: https://www.ons.gov.uk/economy/inflationandpriceindices
+- Applied to: all renewal price calculations
+- Before each renewal batch, verify the current ONS CPI rate and update if different
+
+### What Staff Does
+1. Reviews the renewal queue in the Renewals tab
+2. For each contract up for renewal, clicks **RENEW**
+3. System creates a new **SM8 Job** (type: SC Renewal Invoice category, UUID `a04b781f-047f-4db4-9872-241accbf1f8b`)
+4. Job status: **Quote**
+5. Job description in SM8 includes:
    - "renewal from [previous job number]"
    - "Renewal of SC as per signed contract [old job number]"
    - "Price increase per ONS inflation rate — currently 3.3%"
-   - ONS URL: https://www.ons.gov.uk/economy/inflationandpriceindices
-6. CPI rate: 3.3% (March 2026)
-7. Price: `previous_price × 1.033`
-8. 20% VAT applied
-9. Item code: `Annual Service Contract - Standard Contract - [visits]`
-10. Job goes to Step 3 (Renewal Approval)
+   - ONS URL
+6. Price: `previous_price × 1.033`
+7. 20% VAT applied
+8. Item code: `Annual Service Contract - Standard Contract - [number of visits]`
+9. Job goes to Step 7 (Renewal Approval)
 
-**⚠️ Renewal job created but not yet approved.** Human must review and approve before sending.
+**⚠️ The RENEW button creates a new renewal job but the job is not automatically approved or sent.** Human review is required (Step 7).
 
-**Output:** Renewal job created, moves to Renewal Approval
+### Cancellation Window
+- Contracts can be cancelled with **2 months' notice** before the renewal date
+- If a client gives cancellation notice, update SM8: mark the job appropriately and remove from renewal queue
 
----
+### Edge Cases — Step 6
 
-## Step 7 — Renewal Approval
-
-**Who:** Justin or staff (human review)
-**Portal action:** Review renewal quote → APPROVE AND SEND
-**Same process as Step 3.**
-**Output:** Renewal quote sent to client
-
----
-
-## CPI Rate
-
-**Current rate:** 3.3% (March 2026, ONS)
-**Source:** https://www.ons.gov.uk/economy/inflationandpriceindices
-**Applied to:** All renewal price calculations
-**When to update:** Before each renewal batch; check ONS on renewal processing day
+| Situation | Handling |
+|-----------|----------|
+| Client wants to cancel | Update SM8; mark appropriately; remove from renewal queue |
+| Client wants to change scope | Create a new SC job (New Contract) rather than a renewal |
+| CPI rate has changed | Update CPI in portal before processing renewals |
+| Client wants multi-year contract | Discuss with Justin — may need custom pricing |
+| Renewal job created but client goes quiet | After 45 days → stale quote process |
+| Previous price unknown | Look up `total_invoice_amount` from most recent paid SC job in SM8 |
 
 ---
 
-## Renewal Window Rules
+## Step 7 — Renewal Approval (Human Review)
 
-| Parameter | Value |
-|-----------|-------|
-| Renewal invoice window | 6 weeks before renewal date |
-| Cancellation notice | 2 months before renewal date |
-| Price adjustment | Previous price × (1 + CPI) |
+### Trigger
+Renewal job created in Step 6 appears in the Renewals tab for approval.
+
+### What the Approver Does
+1. Opens the renewal approval item
+2. Reviews the renewal quote:
+   - Checks the proposed price (previous × 1.033)
+   - Verifies the job description references the original contract
+   - Reviews any notes
+3. If satisfied: clicks **APPROVE AND SEND**
+4. If not satisfied: edits or rejects
+
+### Same Process as Step 3
+- CC list: ServiceM8 inbox + Caz + staff
+- Attachments: Renewal quote PDF + original signed contract PDF (from original job diary)
+- Email sent via SM8
+
+### After Approval
+- Job goes back to Step 4 (Invoice Send) for the renewal invoice
+- Renewal invoice is sent to client
+- Client pays → Step 5 (Initiate) → recurring job continues
+
+### Edge Cases — Step 7
+
+| Situation | Handling |
+|-----------|----------|
+| Client wants different price | Reject renewal; renegotiate; create new job if needed |
+| Renewal not processed before expiry | Flag with Justin; contract may have lapsed |
+| Client cancelled | Mark as cancelled in SM8; do not renew |
+| Client wants to change terms | Cancel current renewal job; create new SC job with new terms |
+
+---
+
+## Edge Cases Summary
+
+| Step | Edge Case | Rule |
+|------|-----------|------|
+| Any | Client identity unclear | Do not proceed; verify with Justin |
+| Any | Duplicate SC for same client | Do not create new SC; check existing contract status |
+| Any | Data entry error | Correct before submitting; Justin can amend in SM8 |
+| 1 | Wrong customer selected | Start again; do not delete SM8 job (Justin only deletes) |
+| 2 | Pricing not confirmed | Hold in draft; seek approval before submitting |
+| 3 | Contract PDF missing | Do not send; upload to job diary first |
+| 4 | Payment before signing | Follow up on signing; do not invoice without signed contract |
+| 5 | Recurring job fails | Retry or create manually in SM8 |
+| 6 | Client cancelling | Mark cancelled; remove from renewal queue |
+| 6 | Scope change needed | New SC job, not a renewal |
+| 7 | Price dispute | Reject; renegotiate; escalate to Justin |
+| Any | Client threatening legal action | Escalate to Justin immediately; stop all chasing |
+| Any | GDPR / data request | Escalate to Justin |
+
+---
+
+## SM8 Fields Used in SC Workflow
+
+| SM8 Field | Where Used |
+|-----------|-----------|
+| `generated_job_id` | Display ID (Bas-XXXX) |
+| `status` | Quote → Completed → Unsuccessful |
+| `category_uuid` | SC Standard or SC Renewal Invoice |
+| `payment_received` | Step 4 detection |
+| `invoice_sent` | Step 4 detection |
+| `completion_date` | Quote issued date; renewal date fallback |
+| `customfield_contract_renewal_date` | Renewal window calculation (on company) |
+| `customfield_followup_basis` | Set to "1 Year" at initiation |
+| `customfield_frequency_of_visits` | Visit frequency (from company) |
+| Diary attachments (type=Document) | Contract received detection |
 
 ---
 

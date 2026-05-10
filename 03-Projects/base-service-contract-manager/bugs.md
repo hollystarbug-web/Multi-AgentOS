@@ -10,7 +10,7 @@ tags: [bugs, issues]
 
 ## Known Bugs
 
-### Bug #001 — sc-forms INSERT failure (FIXED)
+### Bug #001 — sc-forms INSERT Failure (FIXED)
 **Date:** 2026-05-10
 **Severity:** Critical
 **Status:** Fixed
@@ -33,6 +33,8 @@ tags: [bugs, issues]
 
 **Files affected:** `/root/portal-api/server.js`
 
+**Lesson:** When an API creates two resources (SM8 job + DB record) in sequence, check the second write's success before returning to the caller.
+
 ---
 
 ### Bug #002 — portal-api Used Wrong DB Path (FIXED)
@@ -46,6 +48,8 @@ tags: [bugs, issues]
 **Fix Applied:**
 - Changed `portal-api` to use `/tmp/portal.db` (same as portal)
 - Rebuilt and restarted both PM2 processes
+
+**Lesson:** When two processes share a database, document the shared path explicitly. Use a constant, not a hardcoded path, in both codebases.
 
 ---
 
@@ -64,41 +68,116 @@ tags: [bugs, issues]
 
 **Rule:** After any portal commit in workspace-sally, MUST pull into /root/portal and rebuild.
 
+**Lesson:** Auto-deploy pipelines need a monitoring step. When two deployment targets exist (Vercel + local VPS), the local VPS path must be explicitly maintained.
+
 ---
 
-## Unverified / Potential Issues
+## What Agents Have Forgotten
 
-### Issue #004 — approval_queue Schema Inconsistency
-**Date:** 2026-05-10
-**Severity:** Medium
+### Forgetting: /root/portal Sync Rule
+**When:** April 28, 2026
+**What was forgotten:** After Sally committed changes to workspace-sally/portal, the changes weren't reaching the custom domain. The /root/portal wasn't being kept in sync.
+**Lesson:** Established as a permanent rule in decisions.md and LEARNINGS.md.
+
+### Forgetting: LEARNINGS.md Was Overwritten
+**When:** May 1, 2026
+**What was forgotten:** During wiki setup, LEARNINGS.md was accidentally overwritten mid-session. All critical rules were lost.
+**Lesson:** Always backup before bulk file operations. Critical files should be immutable (chattr +i).
+
+### Forgetting: Open Questions Between Sessions
+**Context:** Open questions from the 2026-04-24 session (Q1-Q8 in SC-PORTAL-CONTEXT-2026-04-24.md) were not carried forward into the wiki. Several questions remained unanswered for days.
+**Lesson:** Open questions must be in the wiki, not just in session memory files. Wiki is the source of truth for project state.
+
+### Forgetting: Dual-Process Architecture
+**When:** April 28, 2026
+**What was forgotten:** Holly and Sally treated the portal as a single application. The dual-process architecture (Next.js portal + VPS API server) was not clearly documented, leading to confusion about where code runs and which DB is used.
+**Lesson:** Architecture must be documented before building. Dual-process systems need explicit interface contracts.
+
+---
+
+## Known Recurring Errors
+
+### SC v7 Field Storage Location
+**Error class:** Missing assumption
+**Description:** The original spec said SC v7 fields should be stored as SM8 task/checklist fields. The actual implementation stores them in the portal `sc_forms` table. Staff cannot see or edit these fields in the SM8 app.
+**Status:** Open — needs clarification from Justin
+
+### renewal_category Not Synced to SQLite
+**Error class:** Scope mismatch
+**Description:** The sync script (`sync-sm8.js`) only syncs SC category jobs (`6d2fd47f-...`) to `/tmp/portal.db`. SC Renewal Invoice category jobs (`a04b781f-...`) are NOT synced. Portal fetches renewal jobs live from SM8 API. This means renewal data may be stale if the API is slow or rate-limited.
+**Status:** Unverified — may work fine with live fetches
+
+### approval_queue Schema Inconsistency
+**Error class:** Schema drift
+**Description:** `server.js` (VPS API) creates `approval_queue` without `invoicing_address` column. `db.ts` (Next.js) adds it via ALTER TABLE migration. If the VPS API server started before the migration ran, the column may be missing in production.
+**Status:** Unverified — may cause errors if column is missing
+**Fix needed:** Add `invoicing_address` to `server.js` schema definition, or add migration to `server.js`
+
+### SC v7 Numeric Fields Hardcoded to 0
+**Error class:** Incomplete implementation
+**Description:** In `POST /api/sc-form`, the VALUES clause has 8 inline `0` literals for: `lifts_covered`, `visits_per_year`, `full_day_rate`, `per_hour_rate`, `minimum_callout`, `price_per_service`, `price_per_loler`, `total_invoice_per_annum`. These should be parameterizable at Step 2 but Step 1 shouldn't need them. However, Step 2 (`POST /api/sc-form-existing`) does set them correctly.
+**Status:** Works as designed (Step 1 creates draft; Step 2 fills in details) but the inline zeros are confusing in the code
+
+---
+
+## Missing Assumptions
+
+### Assumption: Clerk Auth Is Stable
 **Status:** Unverified
+**Description:** Clerk auth sessions may expire. The portal may need session refresh/re-login handling. No explicit session management code found.
+**Risk:** If Clerk session expires mid-workflow, staff may lose their work.
 
-**Description:** `server.js` (VPS API) creates `approval_queue` table without `invoicing_address` column. `db.ts` (Next.js) adds it via ALTER TABLE migration. If the VPS API server was started before the migration ran, the column may be missing in production.
+### Assumption: Nginx Proxies to /root/portal
+**Status:** Needs verification
+**Description:** The architecture assumes nginx on VPS proxies `dashboard.baselifts.co.uk` to port 3000 (the local /root/portal). This was the state on April 28. It may have been changed.
+**Risk:** If nginx was changed to proxy to Vercel instead, the local portal is bypassed.
 
-**Action needed:** Verify `invoicing_address` column exists in `/tmp/portal.db`:
-```sql
-PRAGMA table_info(approval_queue);
-```
-If missing: `ALTER TABLE approval_queue ADD COLUMN invoicing_address TEXT DEFAULT '';`
+### Assumption: SC v7 Fields Are Stored in Portal DB Only
+**Status:** Needs confirmation from Justin
+**Description:** The implementation stores SC v7 fields in `sc_forms` table. Staff who work primarily in SM8 cannot see these fields there. If Justin wants them in SM8 task fields, the portal needs to call `POST /task.json` for each field.
 
----
-
-### Issue #005 — Renewals Not Synced to SQLite
-**Date:** 2026-05-10
-**Severity:** Low
-**Status:** Unverified
-
-**Description:** `sync-sm8.js` only syncs SC category jobs (`6d2fd47f-...`) to `sm8_jobs` table. SC Renewal Invoice category jobs (`a04b781f-...`) are not synced. Portal fetches renewal jobs live from SM8 API at request time.
-
-**Potential issue:** If SM8 API is slow or rate-limited, renewal jobs may be missed.
-
-**Action needed:** Verify portal live fetches are sufficient for all renewal use cases. Consider adding renewal category to sync script if needed.
+### Assumption: Sync Script Schedule Is Correct
+**Status:** Needs verification
+**Description:** The sync script was reported to take ~80s. If scheduled every 60s (`every 1m` in cron), overlapping runs are possible. The PID lock prevents concurrent runs but may cause skipped syncs.
+**LEARNINGS rule:** The sync script's schedule must exceed runtime + overlap buffer.
 
 ---
 
-## Resolved
+## Sync / Memory Issues Affecting the Project
 
-_(All bugs above are resolved)_
+### Session Memory vs Wiki Memory
+**Issue:** Significant project knowledge was held in Telegram session memory and sub-agent session transcripts. This knowledge was not reliably promoted to durable wiki files.
+**Example:** The INSERT bug was found during the May 10 session but the root cause investigation, previous fixes, and design decisions from April 24-28 sessions were all in session memory.
+**Fix:** All project-relevant knowledge must be written to the wiki after each meaningful session.
+
+### Sub-Agent Memory Persistence
+**Issue:** Sally's sessions were noted as "not reliably persistent." Sally's workspace had significant build artifacts and notes, but session continuity was poor.
+**Fix:** Sally's workspace files are the durable record. Session transcripts are not reliable. Wiki is the source of truth.
+
+### SC v7 Field Question Unanswered for Days
+**Issue:** Q1 ("What exact fields does Justin want in SC v7 form?") was raised by Sally on April 24. The answer was partially confirmed on April 25 but the storage location question remained unanswered as of May 10.
+**Fix:** All open questions must be tracked in `open-questions.md` with a clear "waiting on" tag.
+
+### Knowledge Lost When LEARNINGS.md Was Overwritten
+**Issue:** On May 1, LEARNINGS.md was accidentally overwritten during wiki setup. Critical rules (SQLite/SM8 architecture, Justin-only-deletes) were lost and had to be restored from backup.
+**Fix:** LEARNINGS.md should be immutable (chattr +i). No agent should overwrite it without explicit backup.
+
+### Two Different Database Schemas
+**Issue:** Sally built an earlier version of the SC database schema (`workspace-sally/docs/docs/sc-database-schema.md`) with tables: clients, sc_jobs, visits, price_history, renewals, pending_actions, diary_notes. This schema was never used in production. The actual production schema is in `db.ts` and `server.js` with tables: sc_forms, approval_queue, sm8_jobs, sm8_companies, sm8_company_contacts.
+**Risk:** Future agents may confuse Sally's old schema with the production schema.
+**Fix:** The old schema is obsolete and should not be referenced. All references should point to the current schema in `db.ts`.
+
+---
+
+## Resolved Issues
+
+| Bug | Date | Found By | Fix |
+|-----|------|---------|-----|
+| sc-forms INSERT failure | 2026-05-10 | Holly | Corrected VALUES clause in server.js |
+| portal-api wrong DB path | 2026-04-28 | Holly | Aligned both to /tmp/portal.db |
+| /root/portal 11 commits behind | 2026-04-28 | Holly | Pulled + rebuilt + PM2 restart |
+
+---
 
 ## Last Updated
 
