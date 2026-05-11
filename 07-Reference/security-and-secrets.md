@@ -45,7 +45,7 @@ When documenting a credential in any file (wiki, memory, procedure, report), **a
 QuickBooks password: [QB_PASSWORD]
 
 # WRONG
-QuickBooks password: Reddwarf2026!
+QuickBooks password: [QB_PASSWORD]
 ```
 
 Approved placeholder format: `[SERVICE_NAME_FIELD]` — all caps, underscores.
