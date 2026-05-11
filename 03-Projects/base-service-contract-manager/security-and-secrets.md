@@ -1,84 +1,87 @@
 ---
-title: Security and Secrets
-project: Base Service Contract Manager
+title: Security and Secrets — Base Service Contract Manager
+project: base-service-contract-manager
 created: 2026-05-10
-updated: 2026-05-10
-tags: [security, secrets]
+updated: 2026-05-11
+tags: [security, secrets, project]
 ---
 
-# Security and Secrets
+# Security and Secrets — Base Service Contract Manager
 
-## Storage Rules
+> ⚠️ **For global credential and security rules, see:**
+> - [Global Security Rules](../../07-Reference/security-and-secrets.md)
+> - [Credential Rotation Runbook](../../06-Runbooks/credential-rotation-and-secret-cleanup.md)
+>
+> This file contains **only project-specific notes**. It does not override global rules.
 
-**⚠️ NEVER store secrets, API keys, tokens, cookies, passwords, OAuth credentials, or sensitive logs in:**
-- Wiki files (including this file)
-- MEMORY.md
-- Telegram messages
-- Any file in ~/OpenClaw-Wiki/
-- Any file in ~/.openclaw/workspace/
+---
 
-**If you need to reference a credential in documentation, use a placeholder: `[SERVICE_NAME_KEY]`, `[SERVICE_NAME_PASSWORD]`. Never write the actual value.**
+## Project Credential Files
 
-## Credentials Location
+| File | Contains | Location |
+|------|---------|---------|
+| `servicem8.json` | ServiceM8 API key | `~/.openclaw/workspace/.credentials/` |
+| `servicem8_oauth.json` | ServiceM8 OAuth token | `~/.openclaw/workspace/.credentials/` |
+| Portal SQLite DB | SM8 data mirror (no secrets) | `/tmp/portal.db` |
 
-All credentials are stored in:
-- `~/.openclaw/workspace/.credentials/`
+---
 
-**Never commit credentials to Git. Never paste them in Telegram.**
+## ServiceM8 API Key
 
-## Credentials Inventory
-
-| Service | Credentials Location | Notes |
-|---------|---------------------|-------|
-| ServiceM8 API Key | `~/.openclaw/workspace/.credentials/servicem8.json` | Read-only key |
-| ServiceM8 OAuth | `~/.openclaw/workspace/.credentials/servicem8_oauth.json` | Auto-refreshes |
-| QuickBooks | Browser session (Chrome on Mac Mini) | Credentials in `~/.openclaw/workspace/.credentials/quickbooks-debt-recovery.json` |
-| Gmail | Browser session (Chrome on Mac Mini) | |
-| DocuSign | Browser session | 2FA via authenticator app |
-| Mac Mini SSH | SSH key + password | Credentials in `~/.openclaw/workspace/.credentials/` |
-| VPS root | Password in credentials folder | |
-
-## API Keys (Read-Only)
-
-### ServiceM8 API Key
 **Location:** `~/.openclaw/workspace/.credentials/servicem8.json`
-**Scope:** Read-only for fetching data. Write operations (email/sms) require OAuth.
 
-## OAuth (Write Operations)
+The ServiceM8 API key is **read-only**. Write operations (sending emails, SMS, publishing documents) require OAuth.
 
-ServiceM8 OAuth credentials at `~/.openclaw/workspace/.credentials/servicem8_oauth.json`. Token auto-refreshes when expired.
+**Scope:** Read access to all job, client, invoice, and communication data.
 
-Required for:
-- `jobCommunication` (email/SMS sending)
+**If compromised:** Revoke via ServiceM8 dashboard → Settings → API → Regenerate Key. Then update the credential file and restart portal sync.
+
+---
+
+## ServiceM8 OAuth Token
+
+**Location:** `~/.openclaw/workspace/.credentials/servicem8_oauth.json`
+
+The OAuth token auto-refreshes when expired. Required for:
+- Sending emails/SMS via `jobCommunication` endpoint
 - Publishing documents
 - Managing templates
 
-## Browser Sessions
+**If expired:** OAuth auto-refresh should handle it. If manual re-auth needed, delete `servicem8_oauth.json` and re-authenticate via the SM8 web app.
 
-ServiceM8 and QuickBooks are accessed via Chrome CDP on Mac Mini. Sessions are live in Chrome — no stored credentials needed for automation.
+---
 
-**Never close Chrome on Mac Mini** — closing Chrome ends the sessions.
+## Portal Database
 
-## SSH Keys
+The portal SQLite database (`/tmp/portal.db`) contains a mirror of ServiceM8 data. It is synced every 1 minute via `/root/portal/scripts/sync-sm8.js`.
 
-- VPS root: Password-based — credentials in `~/.openclaw/workspace/.credentials/`
-- Mac Mini: SSH key auth — see `~/.ssh/` for keys
+**No secrets in the portal DB.** The DB contains job data, client names, invoice amounts — all of which are non-secret operational data.
 
-## Secret Redaction
+---
 
-Before backing up memory files, sensitive data is redacted:
-- `memory.before-secret-redaction.*.tar.gz`
-- `memory-dreams.before-secret-redaction.*.tar.gz`
+## SC Portal Credentials
 
-## If You Find a Secret
+The SC Portal (`dashboard.baselifts.co.uk`) uses Clerk for authentication. There are no stored credentials for the portal — Justin logs in via Clerk passkeys.
 
-If you accidentally commit a secret to any repo:
-1. **Do not wait** — the secret is compromised the moment it's in git
-2. **Revoke the credential immediately** in the service's dashboard
-3. **Rotate it** — generate a new credential
-4. **Remove from git** — use BFG or git filter-branch
-5. **Force-push** the cleaned history
+**Vercel API token:** stored in `~/.openclaw/workspace/.credentials/vercel.json`. Used for deployments only.
+
+---
+
+## No Secrets in This Project
+
+This project does not store any secrets in wiki files, git, Telegram, or memory files.
+
+Secrets for this project are stored only in:
+- `~/.openclaw/workspace/.credentials/servicem8.json`
+- `~/.openclaw/workspace/.credentials/servicem8_oauth.json`
+
+---
+
+## Related
+
+- [Global Security Rules](../../07-Reference/security-and-secrets.md)
+- [Credential Rotation Runbook](../../06-Runbooks/credential-rotation-and-secret-cleanup.md)
 
 ## Last Updated
 
-`2026-05-10`
+`2026-05-11`

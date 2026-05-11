@@ -30,6 +30,8 @@ Canonical knowledge base for Base Lift Services operations, maintained by Holly 
 - **Active procedures:** [04-Procedures/](04-Procedures/)
 - **Today's status:** [03-Projects/base-service-contract-manager/status.md](03-Projects/base-service-contract-manager/status.md)
 - **Holly's rules:** [02-Agent-Rules.md](02-Agent-Rules.md)
+- **Security & secrets:** [07-Reference/security-and-secrets.md](07-Reference/security-and-secrets.md)
+- **Credential rotation:** [06-Runbooks/credential-rotation-and-secret-cleanup.md](06-Runbooks/credential-rotation-and-secret-cleanup.md)
 
 ## Machine Roles
 
@@ -41,4 +43,4 @@ Canonical knowledge base for Base Lift Services operations, maintained by Holly 
 
 ## Last Updated
 
-`2026-05-10` — Initial wiki setup
+`2026-05-11` — Added security & credential rotation documentation
