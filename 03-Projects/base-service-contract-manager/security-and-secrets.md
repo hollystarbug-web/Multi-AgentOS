@@ -77,6 +77,20 @@ Secrets for this project are stored only in:
 
 ---
 
+## Portal-API Credential Loading
+
+The portal-API server (`/root/portal-api/server.js`) loads the SM8 API key via `getSM8ApiKey()`:
+1. `SERVICEM8_API_KEY` environment variable (preferred)
+2. `~/.openclaw/workspace/.credentials/servicem8.json` → `apiKey` field
+
+No hardcoded fallback. Fails clearly if key is missing.
+
+**⚠️ Do not add hardcoded credentials to `/root/portal-api/server.js`.**
+
+Credentials for the portal-api are also protected by:
+- `.gitignore` entries: `.env`, `.env.*`, `ecosystem.config.js`, `.credentials/`, `*.key`, `*.pem`
+- Credential file permissions: `600`
+
 ## Related
 
 - [Global Security Rules](../../07-Reference/security-and-secrets.md)

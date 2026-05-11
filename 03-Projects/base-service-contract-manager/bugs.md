@@ -217,6 +217,40 @@ tags: [bugs, issues]
 
 ---
 
+## Security Issues
+
+### SECURITY #002 — Hardcoded SM8 API Key Fallback in portal-api/server.js 🔴 CRITICAL → FIXED
+**Date:** 2026-05-11
+**Severity:** Critical
+**Status:** Fixed
+**Found by:** Justin (security audit request)
+
+**Description:** `/root/portal-api/server.js` had a hardcoded SM8 API key fallback on line 88:
+```javascript
+const SM8_KEY = process.env.SERVICEM8_API_KEY || "smk-4457bf-5dba51feb84ada3a-b34852e9afbff3c7";
+```
+Even though the key was read-only, hardcoding it in source code violates the credential rules: secrets must live only in approved credential files or secret stores, never in code.
+
+**Fix Applied:**
+1. Removed hardcoded fallback from `server.js`
+2. Replaced with `getSM8ApiKey()` function that:
+   - Loads from `SERVICEM8_API_KEY` environment variable (preferred)
+   - Falls back to `~/.openclaw/workspace/.credentials/servicem8.json` → `apiKey` field
+   - Fails cleanly with a clear error message if neither is available
+   - Never prints the actual key value
+3. Set credential file permissions to `600` (was `644`)
+4. Updated `/root/portal-api/.gitignore` to protect: `.env`, `.env.*`, `ecosystem.config.js`, `.credentials/`, `*.key`, `*.pem`
+5. Backed up original: `/root/portal-api/server.js.bak-20260511075839`
+6. Restarted `portal-api` PM2 process — verified responding correctly
+
+**Files affected:** `/root/portal-api/server.js`
+**Files updated:** `/root/portal-api/.gitignore`
+**Credential file:** `~/.openclaw/workspace/.credentials/servicem8.json` (permissions fixed to 600)
+
+**Lesson:** Even read-only API keys must not be hardcoded. Use environment variables or approved credential files exclusively.
+
+---
+
 ## Last Updated
 
-`2026-05-10`
+`2026-05-11`

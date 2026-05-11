@@ -8,6 +8,31 @@ tags: [changelog, history]
 
 # Changelog — Base Service Contract Manager
 
+## 2026-05-11
+
+### Security Fix — Removed Hardcoded SM8 API Key from portal-api
+**Who:** Holly (per Justin security audit)
+**Issue:** `/root/portal-api/server.js` had a hardcoded SM8 API key fallback (`smk-4457bf-5dba51feb84ada3a-b34852e9afbff3c7`) on line 88. Even though the key was read-only, hardcoding any secret in code violates credential rules.
+**Fix:**
+- Replaced hardcoded fallback with `getSM8ApiKey()` function — loads from `SERVICEM8_API_KEY` env var first, then `~/.openclaw/workspace/.credentials/servicem8.json`
+- Fails cleanly with clear error if neither source available — never prints the key
+- Fixed credential file permissions from `644` to `600`
+- Updated `/root/portal-api/.gitignore` to protect: `.env`, `.env.*`, `ecosystem.config.js`, `.credentials/`, `*.key`, `*.pem`
+- Backed up original: `/root/portal-api/server.js.bak-20260511075839`
+- Restarted `portal-api` PM2 — verified responding correctly at port 3001
+**Files:** `/root/portal-api/server.js`, `/root/portal-api/.gitignore`
+
+### Wiki Cleanup — Security Documentation Organised
+**Who:** Holly
+**Change:** Organised security docs per Justin's required structure:
+- Created `07-Reference/security-and-secrets.md` (global credential rules)
+- Created `06-Runbooks/credential-rotation-and-secret-cleanup.md` (rotation runbook)
+- Updated project `security-and-secrets.md` to link to global files
+- Updated `00-Index.md` with links
+**Commit:** `6d0bd2d`
+
+---
+
 ## 2026-05-10
 
 ### Bug Fix — sc-forms INSERT Failure (Critical)
