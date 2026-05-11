@@ -91,6 +91,28 @@ Credentials for the portal-api are also protected by:
 - `.gitignore` entries: `.env`, `.env.*`, `ecosystem.config.js`, `.credentials/`, `*.key`, `*.pem`
 - Credential file permissions: `600`
 
+## Before Committing — Checklist
+
+Run this before any commit or code change:
+
+- [ ] No real API keys, passwords, or tokens in any file
+- [ ] Credential values replaced with `[PLACEHOLDER]` format
+- [ ] No hardcoded secrets in server.js, scripts, or portal code
+- [ ] Secret scan clean (see below)
+- [ ] `.gitignore` protects new credential files
+
+**Quick secret scan:**
+```bash
+cd ~/OpenClaw-Wiki
+grep -rEn "(password|api_key|apikey|secret|token|credential|auth|bearer|oauth).*[:=][\"']?\s*[A-Za-z0-9/+=]{16,}[\"']?" \
+  --include="*.md" --include="*.json" --include="*.py" --include="*.sh" \
+  . 2>/dev/null | grep -v "/.credentials/" | grep -v "/.git/"
+```
+
+**All placeholder values** (never use real values): `[SM8_API_KEY]`, `[QB_PASSWORD]`, `[GMAIL_APP_PASSWORD]`, `[SM8_OAUTH_TOKEN]`, `[VERCEL_API_TOKEN]`, etc.
+
+---
+
 ## Related
 
 - [Global Security Rules](../../07-Reference/security-and-secrets.md)
