@@ -12,7 +12,7 @@ tags: [changelog, history]
 
 ### Security Fix — Removed Hardcoded SM8 API Key from portal-api
 **Who:** Holly (per Justin security audit)
-**Issue:** `/root/portal-api/server.js` had a hardcoded SM8 API key fallback (`smk-4457bf-5dba51feb84ada3a-b34852e9afbff3c7`) on line 88. Even though the key was read-only, hardcoding any secret in code violates credential rules.
+**Issue:** `/root/portal-api/server.js` had a hardcoded SM8 API key fallback (`[SM8_API_KEY]`) on line 88. Even though the key was read-only, hardcoding any secret in code violates credential rules.
 **Fix:**
 - Replaced hardcoded fallback with `getSM8ApiKey()` function — loads from `SERVICEM8_API_KEY` env var first, then `~/.openclaw/workspace/.credentials/servicem8.json`
 - Fails cleanly with clear error if neither source available — never prints the key

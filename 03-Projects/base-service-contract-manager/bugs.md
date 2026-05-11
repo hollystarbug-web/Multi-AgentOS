@@ -227,7 +227,7 @@ tags: [bugs, issues]
 
 **Description:** `/root/portal-api/server.js` had a hardcoded SM8 API key fallback on line 88:
 ```javascript
-const SM8_KEY = process.env.SERVICEM8_API_KEY || "smk-4457bf-5dba51feb84ada3a-b34852e9afbff3c7";
+const SM8_KEY = process.env.SERVICEM8_API_KEY || "[SM8_API_KEY]";
 ```
 Even though the key was read-only, hardcoding it in source code violates the credential rules: secrets must live only in approved credential files or secret stores, never in code.
 
