@@ -29,6 +29,9 @@ tags: [security, secrets, global]
 ### Secrets Are Only Stored In
 
 - ✅ `~/.openclaw/workspace/.credentials/` — JSON credential files (gitignored)
+  - Directory permissions: `700` (rwx------)
+  - File permissions: `600` (rw------)
+  - Never committed to git
 - ✅ Environment variables (for secrets that need to be env-based)
 - ✅ System secret stores (macOS Keychain, etc.)
 - ✅ Cloudflare dashboard (DNS tokens)
