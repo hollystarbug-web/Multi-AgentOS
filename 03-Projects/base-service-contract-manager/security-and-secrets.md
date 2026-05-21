@@ -2,7 +2,7 @@
 title: Security and Secrets — Base Service Contract Manager
 project: base-service-contract-manager
 created: 2026-05-10
-updated: 2026-05-11
+updated: 2026-05-21
 tags: [security, secrets, project]
 ---
 
@@ -61,9 +61,30 @@ The portal SQLite database (`/tmp/portal.db`) contains a mirror of ServiceM8 dat
 
 ## SC Portal Credentials
 
-The SC Portal (`dashboard.baselifts.co.uk`) uses Clerk for authentication. There are no stored credentials for the portal — Justin logs in via Clerk passkeys.
+The SC Portal (`dashboard.baselifts.co.uk`) uses Clerk for authentication.
 
-**Vercel API token:** stored in `~/.openclaw/workspace/.credentials/vercel.json`. Used for deployments only.
+### Clerk Authentication
+| File | Contains | Location |
+|------|---------|----------|
+| `clerk-sally.json` | Clerk publishable key + secret key | `~/.openclaw/workspace/.credentials/` |
+
+**Clerk publishable key** is used by Next.js at runtime (via `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`). **Clerk secret key** is used server-side by Clerk SDK.
+
+If Clerk auth breaks: check `.env.local` in the portal directory — it must have real Clerk keys, not placeholders. See [portal env audit lesson](../../05-Learnings/portal-env-audit.md).
+
+### Vercel API Token
+| File | Contains | Location |
+|------|---------|----------|
+| `vercel-sally.json` | Vercel API token | `~/.openclaw/workspace/.credentials/` |
+
+Used for deployments only.
+
+**Clerk keys are stored at:**
+```
+~/.openclaw/workspace/.credentials/clerk-sally.json
+```
+
+The `.env.local` in the portal directory (`~/.openclaw/workspace-sally/portal/`) must reference these keys via `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`. Never hardcode Clerk keys in `.env.local` — always load from the credentials file or use the credentials store.
 
 ---
 
@@ -71,9 +92,18 @@ The SC Portal (`dashboard.baselifts.co.uk`) uses Clerk for authentication. There
 
 This project does not store any secrets in wiki files, git, Telegram, or memory files.
 
-Secrets for this project are stored only in:
-- `~/.openclaw/workspace/.credentials/servicem8.json`
-- `~/.openclaw/workspace/.credentials/servicem8_oauth.json`
+## Complete Credential Index
+
+All secrets for this project:
+
+| File | Contains | Used By |
+|------|---------|---------|
+| `servicem8.json` | ServiceM8 API key | Portal sync, SM8 API scripts |
+| `servicem8_oauth.json` | ServiceM8 OAuth token | Portal email/SMS sending |
+| `clerk-sally.json` | Clerk publishable + secret key | Portal authentication |
+| `vercel-sally.json` | Vercel API token | Portal deployments |
+
+**All stored in:** `~/.openclaw/workspace/.credentials/`
 
 ---
 

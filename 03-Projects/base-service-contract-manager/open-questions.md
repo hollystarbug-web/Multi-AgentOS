@@ -260,3 +260,53 @@ If they crash, does anyone get alerted?
 ## Last Updated
 
 `2026-05-10`
+
+---
+
+### Q24 — SO/DD Monthly Extraction Cron
+**Question:** The SO/DD monthly extraction cron was never activated. April 2026 data had to be extracted manually. Need to set up the cron properly and confirm SO/DD source accounts.
+**Priority:** 🟡 MEDIUM
+**Waiting on:** Justin
+
+### Q25 — SM8 Browser Login Skill
+**Question:** Justin requested a skill/script to open SM8 login page and log in via Chrome/CDP on Mac Mini.
+**Priority:** 🟢 LOW
+**Waiting on:** Justin
+
+---
+
+## Status Summary (Updated 2026-05-21)
+
+| # | Question | Priority | Status |
+|---|---------|---------|--------|
+| Q1 | SC v7 field storage location | ✅ ANSWERED | Justin |
+| Q2 | Renewal rejection path | 🔴 HIGH | Waiting |
+| Q3 | Badge count scope | 🟡 MEDIUM | Waiting |
+| Q4 | Re-initiating renewal | 🟡 MEDIUM | Waiting |
+| Q5 | Nginx proxy destination | ✅ ANSWERED | Verified |
+| Q6 | Clerk auth stability | 🟡 MEDIUM | Waiting |
+| Q7 | Who does SC admin | 🟡 MEDIUM | Waiting |
+| Q8 | SC SLA / response time | 🟢 LOW | Waiting |
+| Q9 | SM8 checklist API scope | 🟡 MEDIUM | Agent |
+| Q10 | SM8 diary detection | 🟡 MEDIUM | Agent |
+| Q11 | DocuSign integration | 🟡 MEDIUM | Justin |
+| Q12 | Renewal category sync | 🟡 MEDIUM | Waiting |
+| Q13 | SM8 custom field names | 🟡 MEDIUM | Agent |
+| Q14 | approval_queue schema | ✅ VERIFIED | Agent |
+| Q15 | previous_price usage | 🟢 LOW | Justin |
+| Q16 | SC exclusion scope | 🟢 LOW | Justin |
+| Q17 | Portal user roles | 🟡 MEDIUM | Waiting |
+| Q18 | Clerk auth roles | 🟢 LOW | Waiting |
+| Q19 | Manual signing process | 🟡 MEDIUM | Waiting |
+| Q20 | Signing platform | 🟡 MEDIUM | Waiting |
+| Q21 | Delete permissions | 🟢 LOW | Justin |
+| Q22 | Vercel vs local strategy | 🟡 MEDIUM | Waiting |
+| Q23 | PM2 monitoring | 🟢 LOW | Waiting |
+| Q24 | SO/DD monthly extraction | 🟡 MEDIUM | Waiting |
+| Q25 | SM8 browser login skill | 🟢 LOW | Waiting |
+
+---
+
+## Last Updated
+
+`2026-05-21`

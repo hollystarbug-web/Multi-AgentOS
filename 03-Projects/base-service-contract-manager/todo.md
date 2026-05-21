@@ -2,90 +2,70 @@
 title: Todo
 project: Base Service Contract Manager
 created: 2026-05-10
-updated: 2026-05-10
+updated: 2026-05-21
 tags: [todo, open-items]
 ---
 
 # Todo — Base Service Contract Manager
 
-## Immediate Priority — Verification Checks
+## Completed Items ✅
 
-These must be done before any build work:
+- ✅ INSERT bug fix (2026-05-10) — sc_form INSERT parameter mismatch fixed in server.js
+- ✅ Portal DB URL fix (2026-05-21) — portal now uses /root/portal.db (was /tmp/portal.db)
+- ✅ Approval queue query fix (2026-05-21) — now returns all non-rejected items
+- ✅ MC001 line item removed (2026-05-21) — Minimum Call-Out no longer shown as billable item
+- ✅ Job description → NEW SERVICE CONTRACT (2026-05-21)
+- ✅ Email To/BCC routing (2026-05-21)
+- ✅ Labour rates auto-fill from portal_settings (2026-05-21)
 
-### Git Sync Check 🟡
-- [ ] Compare `/root/portal` and `workspace-sally/portal` git logs
-- [ ] Pull /root/portal if behind
-- Command:
-```bash
-cd /root/portal && git log --oneline -3
-cd ~/.openclaw/workspace-sally/portal && git log --oneline -3
-```
+## Immediate Priority — End-to-End Test 🔴 URGENT
 
-### approval_queue Schema Check 🟡
-- [ ] Verify `invoicing_address` column exists in `/tmp/portal.db`
-- Command: `sqlite3 /tmp/portal.db "PRAGMA table_info(approval_queue);"`
-- If missing: `ALTER TABLE approval_queue ADD COLUMN invoicing_address TEXT DEFAULT '';`
+### Full SC Workflow Test (PENDING — need fresh item)
 
-### Nginx Config Check 🟡
-- [ ] Verify which portal serves `dashboard.baselifts.co.uk` (VPS /root/portal or Vercel)
-- Command: `cat /etc/nginx/sites-available/portal`
+All fixes deployed 2026-05-21. Both test items already sent:
+- Bas-4643 — "Acme Properties Test 1234 Ltd" — status: sent
+- Bas-4644 — "Acme Properties - Step 3 test" — status: sent
 
-### Sally Memory Files Check 🟡
-- [ ] Read Sally's memory files from 2026-04-24 through 2026-04-26
-- Files:
-  - `~/.openclaw/workspace-sally/memory/2026-04-24.md`
-  - `~/.openclaw/workspace-sally/memory/2026-04-25.md`
-  - `~/.openclaw/workspace-sally/memory/2026-04-26.md`
-- Extract: any knowledge not already in the wiki
+**Need:** A new pending approval queue item to test the full flow:
+1. Step 1: New Contract → creates SM8 job
+2. Step 2: SC v7 form → submit for approval
+3. Step 3: Approve email → should succeed without "item not found"
+4. Verify SM8 job_description = "NEW SERVICE CONTRACT"
+5. Verify no MC001 line item in Step 3
+6. Verify email received correctly
+
+**Contact:** Need a test client or Justin to create a real new contract
 
 ---
 
-## Next Build Step — After Verification
+## Open Issues (as of 2026-05-21)
 
-### End-to-End Workflow Test 🔴 URGENT
-- [ ] Test the full SC workflow with a real or test client
-  - Step 1: New Contract → creates SM8 job
-  - Step 2: SC v7 form → submit for approval
-  - Step 3: Approve email (human review)
-  - Step 4: Invoice Send detection
-  - Step 5: Initiate checklist
-- **Why:** The INSERT bug means no job has ever successfully completed Step 1 → Step 2 before May 10 fix. The entire pipeline needs live testing.
-- **Contact:** Need a test client or Justin to create a real new contract
-
-### SC v7 Field Storage Clarification ✅ COMPLETED (2026-05-10)
-- [x] Decision confirmed: store in portal `sc_forms` SQLite table only. NOT in SM8 task fields.
-- **Reasoning:** Staff workflow is portal-first. SM8 task fields not required.
-- **Confirmed by:** Justin (2026-05-10)
+| # | Issue | Priority | Status |
+|---|-------|---------|--------|
+| B007 | Premature email firing on Step 1 | 🔴 HIGH | Open — needs investigation |
+| B008 | Invoice number anomaly in Step 3 | 🟡 MEDIUM | Open — need clarification from Justin |
+| B009 | Labour rates auto-fill timing | 🟢 LOW | Low priority — data saves correctly |
+| B010 | Lead source options missing in SC form | 🟢 LOW | Open |
+| Q24 | SO/DD = 0 investigation | 🟡 MEDIUM | Waiting on Justin — monthly cron never activated |
+| Q25 | SM8 browser login skill | 🟢 LOW | Waiting on Justin |
 
 ---
 
-## Documentation
+## Verification Checks (From 2026-05-10 — Most Likely Done)
 
-### Wiki Migration ✅ COMPLETED (2026-05-10)
-- [x] status.md — updated with current working/broken state
-- [x] changelog.md — full build history documented
-- [x] decisions.md — all decisions documented (Q1 confirmed 2026-05-10)
-- [x] architecture.md — correct architecture documented
-- [x] data-model.md — corrected schema documented
-- [x] servicem8-integration.md — updated with diary attachment, OAuth, automation
-- [x] service-contract-workflow.md — updated with confirmed SC v7 fields and initiation steps
-- [x] bugs.md — updated with all known bugs
-- [x] agent-rules.md — comprehensive non-negotiable rules
-- [x] knowledge-migration.md — sources, gaps, risks, recommendations
-- [x] 05-Learnings/ — prevention rules for future sessions
+These were checked in the 2026-05-10 session:
 
-### Additional Wiki Updates 🟡
-- [ ] README.md — update to reflect current state
-- [ ] `prompts.md` — update with current automation commands (agent-browser, Codex)
-- [ ] `agent-rules.md` — review and update Sally's role description
+- [x] Git sync — `/root/portal` vs `workspace-sally/portal` — resolved
+- [x] approval_queue schema — `invoicing_address` column confirmed present
+- [x] Nginx config — verified dashboard.baselifts.co.uk serves local portal
 
 ---
 
 ## Ongoing Monitoring
 
-- [ ] Monitor portal health after May 10 INSERT bug fix
+- [x] Monitor portal health after May 10 INSERT bug fix ✅ (working)
 - [ ] Verify Bas-4529 (DVB Capital Assets II LLC) successfully moves through pipeline
-- [ ] Check SM8 sync is working reliably
+- [x] Check SM8 sync is working reliably ✅
 - [ ] Verify Clerk auth is stable
 
 ---
@@ -97,6 +77,7 @@ cd ~/.openclaw/workspace-sally/portal && git log --oneline -3
 - [ ] Add more test cases for edge cases (renewal of renewal, cancellation mid-workflow)
 - [ ] Document the stale quotes workflow
 - [ ] Add badge counts on tab buttons (verify they work)
+- [ ] Add lead source dropdown to SC form Step 2
 
 ---
 
@@ -105,18 +86,20 @@ cd ~/.openclaw/workspace-sally/portal && git log --oneline -3
 | # | Question | Priority | Status |
 |---|---------|---------|--------|
 | Q2 | Renewal rejection path | 🔴 HIGH | Waiting |
-| Q3 | Badge count scope (Renewals tab) | 🟡 MEDIUM | Waiting |
+| Q3 | Badge count scope | 🟡 MEDIUM | Waiting |
 | Q4 | Re-initiating renewal | 🟡 MEDIUM | Waiting |
-| Q5 | Nginx proxy destination | 🟡 MEDIUM | Verification in progress |
-| Q6 | Clerk auth stability | 🟡 MEDIUM | Monitor |
-| Q7 | Who does SC admin day-to-day | 🟡 MEDIUM | Waiting |
+| Q6 | Clerk auth stability | 🟡 MEDIUM | Waiting |
+| Q7 | Who does SC admin | 🟡 MEDIUM | Waiting |
 | Q8 | SC SLA / follow-up timing | 🟢 LOW | Waiting |
-| Q12 | Renewal category sync strategy | 🟡 MEDIUM | Waiting |
+| Q12 | Renewal category sync | 🟡 MEDIUM | Waiting |
 | Q17 | Portal user roles | 🟡 MEDIUM | Waiting |
-| Q22 | Vercel vs local portal strategy | 🟡 MEDIUM | Waiting |
+| Q22 | Vercel vs local portal | 🟡 MEDIUM | Waiting |
+| Q23 | PM2 monitoring | 🟢 LOW | Waiting |
+| Q24 | SO/DD monthly extraction cron | 🟡 MEDIUM | Waiting |
+| Q25 | SM8 browser login skill | 🟢 LOW | Waiting |
 
 ---
 
 ## Last Updated
 
-`2026-05-10`
+`2026-05-21`

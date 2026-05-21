@@ -186,3 +186,36 @@ tags: [changelog, history]
 ## Last Updated
 
 `2026-05-10`
+
+---
+
+## 2026-05-21 — Session: Portal Testing & Bug Fixes
+
+### Database Fixes
+- **Portal database URL** — Fixed portal (Next.js) to use `/root/portal.db` (was using `/tmp/portal.db` — empty). Created `ecosystem.portal.config.js` with `DATABASE_URL=/root/portal.db`.
+- **Approval queue query** — Fixed `GET /api/approval-queue` to return all non-rejected items (was only pending_review). Sent items now remain visible.
+
+### SC Form Step 3 Fixes
+- **MC001 row removed** — Minimum Call-Out Charge row removed from Step 3 quote display in ApproveEmailTab.tsx
+- **MC001 SM8 push removed** — Minimum Call-Out Charge no longer pushed to SM8 as jobMaterial billing item
+- **Job description** — Default changed to "NEW SERVICE CONTRACT" in SM8 job creation
+
+### Email Routing
+- **To/BCC split** — Customer contact email goes to To field, staff emails (caz@, 696d5a@, justin.h@) go to BCC to prevent SM8 rejection
+
+### Labour Rates Auto-Fill
+- **Portal settings integration** — SC Form Step 2 now auto-fills Full Day Rate, Per Hour Rate, Minimum Callout from portal_settings on mount
+- **Loading guard added** — Prevents premature submission before settings load
+
+### Files Modified
+- `/root/.openclaw/workspace-sally/portal/ecosystem.portal.config.js` (created)
+- `/root/.openclaw/workspace-sally/portal/components/ApproveEmailTab.tsx` (MC001 row removed)
+- `/root/.openclaw/workspace-sally/portal/app/api/approval-queue/send/route.ts` (min callout push removed, email routing added)
+- `/root/.openclaw/workspace-sally/portal/app/api/sc-form/route.ts` (job_description default)
+- `/root/.openclaw/workspace-sally/portal/components/SCFormTab.tsx` (labour rates auto-fill)
+- `/root/portal-api/server.js` (approval queue query fix)
+
+### Test Items Created
+- Bas-4643 — "Acme Properties Test 1234 Ltd" — status: sent
+- Bas-4644 — "Acme Properties - Step 3 test" — status: sent
+

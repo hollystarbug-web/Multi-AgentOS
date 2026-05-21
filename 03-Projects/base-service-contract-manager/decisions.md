@@ -128,3 +128,43 @@ tags: [decisions, design-decisions]
 ## Last Updated
 
 `2026-05-10`
+
+---
+
+## Portal Architecture Decisions (2026-05-21)
+
+### Portal Has Two Separate Processes with Separate DB Risks
+**Decision:** The portal (Next.js, port 3000) and portal-api (Node.js, port 3001) are separate PM2 processes. Both must use the same database file (`/root/portal.db`) via `DATABASE_URL` environment variable.
+**Why:** If they use different databases, Step 3 send fails with "Item not found" because the approval queue items exist in one DB but not the other.
+**Source:** Bug #003 investigation — Holly 2026-05-21
+
+### Portal Must Be Rebuilt After Any Source Code Change
+**Decision:** The Next.js portal requires `npm run build` followed by PM2 restart after any code change.
+**Why:** Next.js compiles TypeScript/React to JavaScript. Changes don't take effect until rebuilt.
+**Source:** Holly 2026-05-21
+
+### Minimum Call-Out Charge Is Not a Billable Line Item
+**Decision:** The minimum call-out charge is a T&Cs/fee structure term. It should NOT appear as a product line item (MC001) in the Step 3 quote display, and should NOT be pushed to SM8 as a jobMaterial billing item.
+**Why:** It is not a product or service to be sold — it is a pricing floor/emergency fee reference.
+**Source:** Justin 2026-05-21
+
+### Job Description for New SC Jobs = "NEW SERVICE CONTRACT"
+**Decision:** When an SC form is submitted and a SM8 job is created, `job_description` should default to exactly "NEW SERVICE CONTRACT" (no company name, no "Service Contract — N x per annum" format).
+**Why:** Justin's requirement for consistent job descriptions on all new SC quote jobs.
+**Source:** Justin 2026-05-21
+
+### Email Routing: Customer to To, Staff to BCC
+**Decision:** Quote emails sent via SM8 should have the customer's contact email in the To field, and internal staff emails (caz@baselifts.co.uk, 696d5a@inbox.servicem8.com, justin.h@baselifts.co.uk) in BCC.
+**Why:** SM8 rejects emails where internal addresses are in the To field.
+**Source:** Holly investigation 2026-05-21
+
+### Labour Rates Auto-Fill from portal_settings
+**Decision:** SC Form Step 2 should auto-populate Full Day Rate, Per Hour Rate, and Minimum Callout from portal_settings on mount.
+**Why:** Saves time for staff. Values are fetched async and may not complete before fast submissions.
+**Source:** Justin 2026-05-21
+
+### Approval Queue Shows All Non-Rejected Items
+**Decision:** The approval queue list should show all items except rejected ones (pending_review AND sent).
+**Why:** Users need to see send history. Empty list after sending is confusing.
+**Source:** Bug #004 — Holly 2026-05-21
+
