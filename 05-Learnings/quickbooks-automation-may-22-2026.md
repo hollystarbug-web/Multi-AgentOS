@@ -107,3 +107,24 @@ print(f"Tabs: {len(context.pages)}")
 
 ### Rule: CDP JS click on React elements does NOT work
 **What:** Don't use CDP `Runtime.evaluate` with `.click()` for React elements on Intuit's sign-in page. **Why:** React uses synthetic event handlers that CDP JS clicks don't trigger. **When:** Any time trying to click buttons on QB/Intuit sign-in page via CDP.
+
+---
+
+## SC Form Bug Fix — Checklist Item Name (May 22 2026)
+
+**File changed:** `/root/.openclaw/workspace-sally/portal/app/api/sc-form/route.ts`
+
+**Bug:** Step 1 was adding checklist item "Service Contract Signed and Returned" instead of the correct name.
+
+**Fix applied:**
+```typescript
+// Before:
+name: "Service Contract Signed and Returned",
+
+// After:
+name: "Service Contract v7 - Base Lift Services Limited",
+```
+
+**How to find the exact name:** Look at existing ServiceM8 job cards — Justin can send a screenshot showing the checklist. The exact name is visible in the UI.
+
+**Portal rebuild required:** Yes (`npm run build && pm2 restart portal`)
