@@ -66,14 +66,28 @@ export type VaultSaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface AppState {
   // Settings
-  apiKey: string
+  apiKey: string                      // Anthropic
+  deepseekApiKey: string              // DeepSeek
+  openaiApiKey: string                // OpenAI
+  openrouterApiKey: string           // OpenRouter
   hetznerHost: string
   macMiniHost: string
   openclawUrl: string
   setApiKey: (key: string) => void
+  setDeepseekApiKey: (key: string) => void
+  setOpenaiApiKey: (key: string) => void
+  setOpenrouterApiKey: (key: string) => void
   setHetznerHost: (host: string) => void
   setMacMiniHost: (host: string) => void
   setOpenclawUrl: (url: string) => void
+
+  // Model selection
+  selectedModel: string
+  defaultModel: string
+  fallbackModel: string
+  setSelectedModel: (model: string) => void
+  setDefaultModel: (model: string) => void
+  setFallbackModel: (model: string) => void
 
   // Vault / SSH settings
   vaultEnabled: boolean
@@ -173,13 +187,27 @@ export const useStore = create<AppState>()(
   persist(
     (set) => ({
       apiKey: '',
+      deepseekApiKey: '',
+      openaiApiKey: '',
+      openrouterApiKey: '',
       hetznerHost: '',
       macMiniHost: '',
       openclawUrl: '',
       setApiKey: (apiKey) => set({ apiKey }),
+      setDeepseekApiKey: (deepseekApiKey) => set({ deepseekApiKey }),
+      setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
+      setOpenrouterApiKey: (openrouterApiKey) => set({ openrouterApiKey }),
       setHetznerHost: (hetznerHost) => set({ hetznerHost }),
       setMacMiniHost: (macMiniHost) => set({ macMiniHost }),
       setOpenclawUrl: (openclawUrl) => set({ openclawUrl }),
+
+      // Model selection
+      selectedModel: 'deepseek-v4-flash',
+      defaultModel: 'deepseek-v4-flash',
+      fallbackModel: 'MiniMax-M2.7-highspeed',
+      setSelectedModel: (selectedModel) => set({ selectedModel }),
+      setDefaultModel: (defaultModel) => set({ defaultModel }),
+      setFallbackModel: (fallbackModel) => set({ fallbackModel }),
 
       // Vault
       vaultEnabled: false,
@@ -275,9 +303,15 @@ export const useStore = create<AppState>()(
       name: 'openclaw-os-state',
       partialize: (s) => ({
         apiKey: s.apiKey,
+        deepseekApiKey: s.deepseekApiKey,
+        openaiApiKey: s.openaiApiKey,
+        openrouterApiKey: s.openrouterApiKey,
         hetznerHost: s.hetznerHost,
         macMiniHost: s.macMiniHost,
         openclawUrl: s.openclawUrl,
+        selectedModel: s.selectedModel,
+        defaultModel: s.defaultModel,
+        fallbackModel: s.fallbackModel,
         vaultEnabled: s.vaultEnabled,
         vaultSshUser: s.vaultSshUser,
         vaultSshKeyPath: s.vaultSshKeyPath,
