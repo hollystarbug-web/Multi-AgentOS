@@ -8,6 +8,7 @@
  *   03-Projects/Agentic-OS/chats/YYYY-MM-DD.md     ← daily chat logs
  *   03-Projects/Agentic-OS/journal/YYYY-MM-DD.md   ← daily journal
  *   03-Projects/Agentic-OS/missions.md             ← rolling mission log
+ *   03-Projects/Agentic-OS/goals/YYYY-MM.md        ← monthly goals (checkbox lists)
  */
 
 export const VAULT_ROOT  = '/root/OpenClaw-Wiki'
@@ -29,6 +30,48 @@ export function journalFilePath(date = todayStr()): string {
 
 export function missionsFilePath(): string {
   return `${VAULT_ROOT}/${PROJECT_DIR}/missions.md`
+}
+
+export function goalsFilePath(date = todayStr()): string {
+  // YYYY-MM.md — one file per month
+  return `${VAULT_ROOT}/${PROJECT_DIR}/goals/${date.slice(0, 7)}.md`
+}
+
+export function goalsFileHeader(date = todayStr()): string {
+  const [year, month] = date.slice(0, 7).split('-')
+  const monthName = new Date(parseInt(year), parseInt(month) - 1, 1)
+    .toLocaleString('en-US', { month: 'long' })
+  return [
+    frontmatter(`Goals — ${monthName} ${year}`, ['agentic-os', 'goals', 'monthly'], date),
+    `# 🎯 Goals — ${monthName} ${year}`,
+    '',
+    '> Auto-saved from Agentic OS dashboard. Update checkbox status here or in the app.',
+    '',
+    '---',
+    '',
+  ].join('\n')
+}
+
+export function formatGoalEntry(goal: {
+  title: string
+  description: string
+  priority: string
+  status: string
+  createdAt: Date
+  completedAt?: Date
+}): string {
+  const created = goal.createdAt.toISOString().slice(0, 10)
+  const checkbox = goal.status === 'completed' ? 'x' : ' '
+  const priorityBadge = { low: '🔵', medium: '🟡', high: '🔴' }[goal.priority] ?? '•'
+  const meta = `*[${created}] ${priorityBadge} ${goal.priority.toUpperCase()}*`
+  const desc = goal.description ? `\n  > ${goal.description}` : ''
+  if (goal.status === 'completed' && goal.completedAt) {
+    const done = goal.completedAt.toISOString().slice(0, 10)
+    return [`- [x] ${goal.title}${desc}
+  ${meta} · completed ${done}`, '', '  ---', ''].join('\n')
+  }
+  return [`- [ ] ${goal.title}${desc}
+  ${meta}`, '', '  ---', ''].join('\n')
 }
 
 // ── Frontmatter ──────────────────────────────────────────────────────────────

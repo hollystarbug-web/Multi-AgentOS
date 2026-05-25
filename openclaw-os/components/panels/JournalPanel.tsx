@@ -1,12 +1,13 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, Save, Trash2, Tag, CheckCircle2, AlertCircle, Loader2, BookMarked } from 'lucide-react'
+import { BookOpen, Save, Trash2, Tag, CheckCircle2, AlertCircle, Loader2, BookMarked, Mic, MicOff } from 'lucide-react'
 import { useStore, JournalEntry } from '@/lib/store'
 import {
   saveToVault, journalFilePath, journalFileHeader,
   formatJournalEntry, todayStr,
 } from '@/lib/vault'
+import { useVoiceInput } from '@/lib/useVoiceInput'
 
 const SUGGESTED_TAGS = ['insight', 'decision', 'idea', 'blocker', 'win', 'learning', 'todo']
 
@@ -17,6 +18,13 @@ export default function JournalPanel() {
   const [saving, setSaving]     = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [saveError, setSaveError] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [voiceActive, setVoiceActive] = useState(false)
+
+  const onFinal = useCallback((text: string) => {
+    setContent((prev) => (prev ? prev + ' ' + text : text))
+    setVoiceActive(false)
+  }, [])
+  const voice = useVoiceInput({ onFinalTranscript: onFinal })
 
   const entries        = useStore((s) => s.journalEntries)
   const addEntry       = useStore((s) => s.addJournalEntry)
@@ -145,19 +153,57 @@ export default function JournalPanel() {
               boxShadow: content ? '0 0 20px rgba(168,85,247,0.07)' : 'none',
             }}
           >
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={`Write today's thoughts, decisions, and insights…\n\nThis will be saved to:\n03-Projects/Agentic-OS/journal/${todayStr()}.md`}
-              className="w-full bg-transparent resize-none outline-none text-sm p-4"
-              style={{
-                color: 'var(--text-1)',
-                lineHeight: '1.7',
-                minHeight: 160,
-                caretColor: 'rgba(168,85,247,0.8)',
-              }}
-            />
+            <div className="flex items-start">
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder={`Write today's thoughts, decisions, and insights…\n\nThis will be saved to:\n03-Projects/Agentic-OS/journal/${todayStr()}.md`}
+                className="flex-1 bg-transparent resize-none outline-none text-sm p-4"
+                style={{
+                  color: 'var(--text-1)',
+                  lineHeight: '1.7',
+                  minHeight: 160,
+                  caretColor: 'rgba(168,85,247,0.8)',
+                }}
+              />
+              {/* Mic button */}
+              {voice.supported && (
+                <button
+                  onClick={() => {
+                    if (voice.state === 'listening') { voice.stop(); setVoiceActive(false) }
+                    else { setVoiceActive(true); voice.start() }
+                  }}
+                  className="m-3 p-2 rounded-xl transition-all flex-shrink-0"
+                  style={{
+                    background: voice.state === 'listening' ? 'rgba(239,68,68,0.15)' : 'rgba(168,85,247,0.08)',
+                    border: `1px solid ${voice.state === 'listening' ? 'rgba(239,68,68,0.4)' : 'rgba(168,85,247,0.2)'}`,
+                    color: voice.state === 'listening' ? 'rgba(239,68,68,0.9)' : 'rgba(168,85,247,0.6)',
+                  }}
+                  title={voice.state === 'listening' ? 'Stop recording' : 'Voice input'}
+                >
+                  {voice.state === 'listening' ? <MicOff size={15} /> : <Mic size={15} />}
+                </button>
+              )}
+            </div>
+            {/* Voice interim text */}
+            {voice.state === 'listening' && voice.interimText && (
+              <div className="px-4 pb-2">
+                <div className="text-xs px-3 py-1.5 rounded-xl"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: 'rgba(239,68,68,0.7)', fontStyle: 'italic' }}>
+                  {voice.interimText}
+                </div>
+              </div>
+            )}
+            {/* Voice error */}
+            {voice.errorMessage && (
+              <div className="px-4 pb-2">
+                <div className="text-xs px-3 py-1.5 rounded-xl"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: 'rgba(239,68,68,0.7)' }}>
+                  {voice.errorMessage}
+                </div>
+              </div>
+            )}
             {/* Metadata bar */}
             <div
               className="flex items-center justify-between px-4 py-2"

@@ -13,6 +13,7 @@ import TerminalPanel from './panels/TerminalPanel'
 import OpenclawPanel from './panels/OpenclawPanel'
 import OverviewPanel from './panels/OverviewPanel'
 import JournalPanel from './panels/JournalPanel'
+import GoalsPanel from './panels/GoalsPanel'
 
 const PANELS: Record<string, React.ReactNode> = {
   overview: <OverviewPanel />,
@@ -22,6 +23,7 @@ const PANELS: Record<string, React.ReactNode> = {
   terminal: <TerminalPanel />,
   openclaw: <OpenclawPanel />,
   journal:  <JournalPanel />,
+  goals:    <GoalsPanel />,
 }
 
 const PANEL_ACCENT: Record<string, string> = {
@@ -32,6 +34,7 @@ const PANEL_ACCENT: Record<string, string> = {
   terminal: 'rgba(16,185,129,',
   openclaw: 'rgba(245,158,11,',
   journal:  'rgba(168,85,247,',
+  goals:    'rgba(249,115,22,',
 }
 
 export default function Dashboard() {
