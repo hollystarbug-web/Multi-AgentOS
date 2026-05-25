@@ -51,6 +51,13 @@ apiKey: string
 hetznerHost: string
 macMiniHost: string
 openclawUrl: string
+deepseekApiKey: string
+openaiApiKey: string
+
+// Model selection (persisted)
+selectedModel: string       // currently selected model (e.g. 'deepseek/deepseek-v4-flash')
+defaultModel: string       // default: 'deepseek/deepseek-v4-flash' via OpenRouter
+fallbackModel: string     // fallback: 'MiniMax-M2.7-highspeed' (free)
 
 // Vault SSH settings (persisted)
 vaultEnabled: boolean
@@ -90,16 +97,34 @@ type AgentNode = {
 
 ## API Routes
 
-### `/api/chat/route.ts` — Claude Streaming
+### `/api/chat/route.ts` — Multi-Provider Streaming
 
-**Method:** POST  
-**Body:** `{ messages: ChatMessage[], apiKey?: string }`
+**Method:** POST
+**Body:** `{ messages: ChatMessage[], model?: string }`
 
-Calls `anthropic.messages.stream()` using `claude-3-5-sonnet-20241022` and pipes the response as Server-Sent Events (`text/event-stream`). The client reads the stream with `ReadableStreamDefaultReader` and appends chunks to the assistant message in real time.
+Handles streaming for **all providers**: Anthropic, DeepSeek, OpenAI, MiniMax, OpenRouter.
 
-The API key is read from the request body first, falling back to `process.env.ANTHROPIC_API_KEY`.
+**Provider detection** (by model ID):
+| Model prefix | Provider |
+|---|---|
+| `claude-*` | Anthropic (`/messages` endpoint) |
+| `deepseek-*` (no slash) | DeepSeek direct |
+| `deepseek/*` (with slash) | OpenRouter (e.g. `deepseek/deepseek-v4-flash`) |
+| `gpt-*`, `o3-*`, `o4-*`, `chatgpt-*` | OpenAI direct |
+| `MiniMax-*` | MiniMax |
+| `openai/*` | OpenRouter (e.g. `openai/gpt-5.5`) |
 
-**System prompt** establishes the assistant as an AI agent orchestration interface operating on the Hetzner VPS + Mac Mini infrastructure.
+**Request formats:**
+- Anthropic: POST to `/messages` with `anthropic-version: 2023-06-01` header
+- All others: OpenAI-style POST to `/chat/completions`
+
+**Default model:** `deepseek/deepseek-v4-flash` (via OpenRouter, $0.10/M input — cheapest)
+**Fallback model:** `MiniMax-M2.7-highspeed` (free)
+
+**OpenRouter models available:**
+- `deepseek/deepseek-v4-flash` — $0.10/M input (default, cheapest)
+- `openai/gpt-5.5` — $5.00/M input (expensive, for complex tasks)
+- `qwen/qwen3.6-plus` — free tier
 
 ### `/api/vault/save/route.ts` — SSH Vault Save
 
@@ -225,4 +250,4 @@ To expose the dashboard publicly, you could use Tailscale's serve feature or an 
 
 ---
 
-*Last updated: 2026-05-25*
+*Last updated: 2026-05-25 | Multi-provider chat routing documented*

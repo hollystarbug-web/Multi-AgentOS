@@ -29,8 +29,8 @@ Think of it as mission control for your entire agentic stack — chat, node moni
 ## Running the App
 
 ```bash
-# Navigate to the project
-cd "/Users/justinhoward/Library/Application Support/Claude/local-agent-mode-sessions/0980e4bb-6670-4fbb-a9f6-3a3729db52bc/4bcd3afc-55fb-4f0b-9bbb-4ed04c3f1edb/local_5fec8168-151c-475c-9bca-bc391ecf606d/outputs/openclaw-os"
+# Navigate to the project (on MacBook)
+cd ~/openclaw-os
 
 # Install dependencies (first time only)
 npm install
@@ -41,6 +41,21 @@ npm run dev
 
 Then open **http://localhost:3000**
 
+### Git Workflow
+
+**This is a bidirectional git repo.** The canonical vault is on GitHub:
+- **Remote:** `https://github.com/hollystarbug-web/openclaw-wiki`
+- **Branch:** `master`
+- **Path in repo:** `03-Projects/Agentic-OS/openclaw-os/`
+
+**When Holly makes changes:** she commits and pushes to GitHub, then notifies Justin.
+**When Justin pulls:** he runs `git pull` on his Mac to get the latest code.
+
+```bash
+# On MacBook — pull latest changes
+cd ~/openclaw-os && git pull
+```
+
 ### Environment Variables
 
 Copy `.env.local.example` → `.env.local` and fill in:
@@ -49,7 +64,7 @@ Copy `.env.local.example` → `.env.local` and fill in:
 ANTHROPIC_API_KEY=sk-ant-api03-...   # Required for Claude chat
 ```
 
-> API key can also be set via the Settings modal (⚙️ top-right) — stored in localStorage.
+> API keys can also be set via the Settings modal (⚙️ top-right) — stored in localStorage.
 
 ---
 
@@ -58,14 +73,51 @@ ANTHROPIC_API_KEY=sk-ant-api03-...   # Required for Claude chat
 | Panel | Sidebar Icon | Description |
 |-------|-------------|-------------|
 | **Overview** | Grid | At-a-glance stats: nodes, missions, chat count, quick actions |
-| **Claude Chat** | Message | Full streaming chat with Claude (claude-3-5-sonnet). Voice input (mic button). Auto-saves to vault |
+| **Chat** | Message | Full streaming chat with any model. Model selector dropdown in header. Voice input (mic button). Auto-saves to vault |
+| **Goals** | Flag | Goal tracker with add/edit/delete/archive, progress bar, vault auto-save to `goals/YYYY-MM.md` |
+| **Journal** | Book | Daily markdown journal with voice input, auto-save to vault |
 | **Node Monitor** | Monitor | Live status of Hetzner VPS + Mac Mini — ping, uptime, CPU/RAM, online/idle/offline |
 | **Mission Control** | Target | Create, dispatch, and track agent tasks. Priority levels (Critical/High/Med/Low). Auto-saves to vault |
 | **Terminal** | Terminal | SSH terminal into the Hetzner VPS rendered in-browser |
 | **Openclaw** | Globe | Embedded Openclaw iframe (configurable URL) |
-| **Journal** | Book | Daily markdown journal with auto-save to vault via SSH → git |
+| **Agent Panels** | Bot | Placeholder panels for: Holly, Kryten, Sally, Grim, Oscar, Reggie, Claude, Hermes (per-agent chat coming next) |
 
 ---
+
+
+## 🤖 Model System
+
+> Full model documentation: [[MODELS]]
+
+Justin wants the **right model for each task** — cost is a primary factor.
+
+### Strategy
+
+| Use Case | Model | Cost |
+|---|---|---|
+| Daily general chat | `deepseek/deepseek-v4-flash` via OpenRouter | **$0.10/M input** (cheapest) |
+| Quick free tasks | `MiniMax-M2.7-highspeed` | **FREE** |
+| Complex reasoning | `claude-opus-4-5` | $15/M input |
+| Heavy professional | `openai/gpt-5.5` via OpenRouter | $5/M input (powerful but expensive) |
+| Fallback | `MiniMax-M2.7-highspeed` | FREE |
+
+### Flow: Agent → Model → Message
+
+1. Select an **agent** from the sidebar (Holly, Kryten, Claude, etc.)
+2. Optionally choose a **model** from the dropdown in the chat header
+3. Type your message and send
+
+The model selector shows all available models grouped by provider, with cost indicators ($ = cheap, $$$ = expensive).
+
+### API Keys
+
+All API keys are set via the **Settings modal** (⚙️ top-right):
+- **OpenRouter API Key** — for DeepSeek V4 Flash via OpenRouter (free tier), GPT-5.5, Qwen
+- **DeepSeek API Key** — for direct DeepSeek access
+- **OpenAI API Key** — for OpenAI direct access
+
+Credentials are stored in vault at `/root/.openclaw/workspace/.credentials/`.
+
 
 ## Vault Auto-Save
 
@@ -144,6 +196,7 @@ openclaw-os/
 ## Related Docs
 
 - [[ARCHITECTURE]] — Technical deep-dive: patterns, store shape, API routes
+- [[MODELS]] — Full model registry: providers, routing, costs, defaults
 - [[TASKS]] — Full task log: completed work + upcoming backlog
 - [[chats/]] — Auto-saved Claude chat sessions
 - [[journal/]] — Daily journal entries
