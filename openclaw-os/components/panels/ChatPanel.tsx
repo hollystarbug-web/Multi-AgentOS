@@ -9,6 +9,7 @@ import {
   saveToVault, chatFilePath, chatFileHeader,
   formatChatEntry, todayStr,
 } from '@/lib/vault'
+import { MODELS, getProviders, getModelsByProvider, type ModelConfig } from '@/lib/models'
 
 export default function ChatPanel() {
   const [input, setInput] = useState('')
@@ -18,6 +19,12 @@ export default function ChatPanel() {
   const isStreaming = useStore((s) => s.isStreaming)
   const setIsStreaming = useStore((s) => s.setIsStreaming)
   const apiKey = useStore((s) => s.apiKey)
+  const deepseekApiKey = useStore((s) => s.deepseekApiKey)
+  const openaiApiKey = useStore((s) => s.openaiApiKey)
+  const selectedModel = useStore((s) => s.selectedModel)
+  const setSelectedModel = useStore((s) => s.setSelectedModel)
+  const defaultModel = useStore((s) => s.defaultModel || 'deepseek-v4-flash')
+  const fallbackModel = useStore((s) => s.fallbackModel || 'MiniMax-M2.7-highspeed')
   const vaultEnabled      = useStore((s) => s.vaultEnabled)
   const hetznerHost       = useStore((s) => s.hetznerHost)
   const vaultSshUser      = useStore((s) => s.vaultSshUser)
@@ -75,6 +82,9 @@ export default function ChatPanel() {
         body: JSON.stringify({
           messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
           apiKey,
+          deepseekApiKey,
+          openaiApiKey,
+          model: selectedModel,
         }),
       })
 
@@ -162,7 +172,14 @@ export default function ChatPanel() {
   return (
     <div className="flex flex-col h-full" style={{ background: 'transparent' }}>
       {/* Header */}
-      <ChatHeader onClear={clearMessages} />
+      <ChatHeader
+        onClear={clearMessages}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
+        fallbackModel={fallbackModel}
+        apiKey={apiKey}
+        deepseekApiKey={deepseekApiKey}
+      />
 
       {/* Messages */}
       <div
@@ -214,27 +231,104 @@ export default function ChatPanel() {
 }
 
 /* ── Header ── */
-function ChatHeader({ onClear }: { onClear: () => void }) {
+function ChatHeader({ onClear, selectedModel, onModelChange, fallbackModel, apiKey, deepseekApiKey }: {
+  onClear: () => void
+  selectedModel: string
+  onModelChange: (m: string) => void
+  fallbackModel: string
+  apiKey: string
+  deepseekApiKey: string
+}) {
+  const [modelOpen, setModelOpen] = useState(false)
+  const model = MODELS[selectedModel] || MODELS['deepseek-v4-flash']
+  const hasAnyKey = apiKey || deepseekApiKey
+
   return (
     <div
       className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
       style={{ borderBottom: '1px solid var(--glass-border)' }}
     >
       <div className="flex items-center gap-3">
-        <AgentAvatar id="claude" size={36} glow status="online" pulse />
+        <AgentAvatar id="claude" size={36} glow status={hasAnyKey ? 'online' : 'offline'} pulse={hasAnyKey} />
         <div>
-          <div className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>Claude</div>
-          <div className="text-xs flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
+          <div className="font-semibold text-sm" style={{ color: 'var(--text-1)' }}>
+            {hasAnyKey ? 'Agent' : 'No API Key'}
+          </div>
+          {/* Model selector button */}
+          <button
+            onClick={() => setModelOpen(!modelOpen)}
+            className="text-xs flex items-center gap-1.5 group"
+            style={{ color: model?.color || 'var(--text-3)' }}
+          >
             <motion.span
               className="w-1.5 h-1.5 rounded-full inline-block"
-              style={{ background: '#10b981' }}
-              animate={{ opacity: [1, 0.4, 1] }}
+              style={{ background: hasAnyKey ? (model?.color || '#10b981') : '#6b7280' }}
+              animate={hasAnyKey ? { opacity: [1, 0.4, 1] } : {}}
               transition={{ duration: 2, repeat: Infinity }}
             />
-            claude-opus-4 · Streaming
-          </div>
+            <span className="group-hover:underline" style={{ color: model?.color || 'var(--text-3)' }}>
+              {model?.name || 'deepseek-v4-flash'}
+            </span>
+            <span className="opacity-50">›</span>
+          </button>
         </div>
       </div>
+
+      {/* Model dropdown */}
+      {modelOpen && (
+        <div
+          className="absolute z-50 mt-2 rounded-xl overflow-hidden shadow-xl"
+          style={{
+            background: 'rgba(10,15,25,0.98)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(20px)',
+            minWidth: '280px',
+            top: '60px',
+            left: '20px',
+          }}
+        >
+          <div className="px-3 py-2 text-xs font-semibold" style={{ color: 'var(--text-muted)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            Select Model — {hasAnyKey ? 'active' : '⚠️ No API key set'}
+          </div>
+          {getProviders().map((prov) => {
+            const models = getModelsByProvider(prov.id)
+            const hasProviderKey = prov.id === 'anthropic' ? !!apiKey : prov.id === 'deepseek' ? !!deepseekApiKey : true
+            return (
+              <div key={prov.id}>
+                <div
+                  className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: hasProviderKey ? prov.color : '#6b7280', background: `${prov.color}08`, borderBottom: `1px solid ${prov.color}15` }}
+                >
+                  {prov.name} {hasProviderKey ? '' : '⚠️ (no key)'}
+                </div>
+                {models.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => { onModelChange(m.id); setModelOpen(false) }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 text-left transition-colors"
+                    style={{ borderLeft: selectedModel === m.id ? `2px solid ${m.color}` : '2px solid transparent' }}
+                  >
+                    <span>{m.icon}</span>
+                    <span className="flex-1">
+                      <span className="text-white font-medium">{m.name}</span>
+                      <span className="block text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {m.bestFor.slice(0,2).join(', ')}
+                      </span>
+                    </span>
+                    <span className="text-xs opacity-60">${m.costPerMillion.input}/M</span>
+                    {selectedModel === m.id && <span style={{ color: m.color }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            )
+          })}
+          <div className="px-3 py-2 text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'var(--text-muted)' }}>
+            Default: {MODELS[selectedModel]?.name} · Fallback: {MODELS[fallbackModel]?.name}
+          </div>
+        </div>
+      )}
+      {modelOpen && <div className="fixed inset-0 z-40" onClick={() => setModelOpen(false)} />}
+
       <motion.button
         whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
         onClick={onClear}

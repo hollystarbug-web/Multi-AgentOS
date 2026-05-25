@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Key, Server, Globe, Eye, EyeOff, Save, CheckCircle, BookMarked } from 'lucide-react'
+import { X, Key, Server, Globe, Eye, EyeOff, Save, CheckCircle, BookMarked, ChevronDown, Bot } from 'lucide-react'
 import { useStore } from '@/lib/store'
+import { MODELS, DEFAULTS, getProviders, getModelsByProvider, type ModelConfig } from '@/lib/models'
 
 export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const store = useStore()
@@ -10,7 +11,13 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const [hetznerHost, setHetznerHost] = useState(store.hetznerHost)
   const [macMiniHost, setMacMiniHost] = useState(store.macMiniHost)
   const [openclawUrl, setOpenclawUrl] = useState(store.openclawUrl)
+  const [deepseekApiKey, setDeepseekApiKey] = useState(store.deepseekApiKey)
+  const [openaiApiKey, setOpenaiApiKey] = useState(store.openaiApiKey)
+  const [defaultModel, setDefaultModel] = useState(store.defaultModel || DEFAULTS.defaultModel)
+  const [fallbackModel, setFallbackModel] = useState(store.fallbackModel || DEFAULTS.fallbackModel)
   const [showKey, setShowKey] = useState(false)
+  const [showDeepseekKey, setShowDeepseekKey] = useState(false)
+  const [showOpenaiKey, setShowOpenaiKey] = useState(false)
   const [saved, setSaved] = useState(false)
   // Vault settings
   const [vaultEnabled, setVaultEnabled] = useState(store.vaultEnabled)
@@ -21,6 +28,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
   const save = () => {
     store.setApiKey(apiKey)
+    store.setDeepseekApiKey(deepseekApiKey)
+    store.setOpenaiApiKey(openaiApiKey)
     store.setHetznerHost(hetznerHost)
     store.setMacMiniHost(macMiniHost)
     store.setOpenclawUrl(openclawUrl)
@@ -28,6 +37,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
     store.setVaultSshUser(vaultSshUser)
     store.setVaultSshKeyPath(vaultSshKeyPath)
     store.setVaultSshPassword(vaultSshPassword)
+    store.setDefaultModel(defaultModel)
+    store.setFallbackModel(fallbackModel)
     setSaved(true)
     setTimeout(() => { setSaved(false); onClose() }, 1200)
   }
@@ -80,7 +91,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
               icon={<Key size={15} />}
               color="rgba(6,182,212,"
               title="Anthropic API Key"
-              description="Used for Claude chat and agent tasks"
+              description="Used for Claude models"
             >
               <div className="relative">
                 <input
@@ -98,9 +109,88 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                   {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
+            </SettingGroup>
+
+            <SettingGroup
+              icon={<span style={{fontSize:13}}>🔵</span>}
+              color="rgba(16,163,127,"
+              title="DeepSeek API Key"
+              description="V4 Flash — $0.14/M input, $0.28/M output. Best for general tasks."
+            >
+              <div className="relative">
+                <input
+                  type={showDeepseekKey ? 'text' : 'password'}
+                  className="input-glass w-full px-3 py-2.5 rounded-xl text-sm pr-10 font-mono"
+                  placeholder="sk-c8c..."
+                  value={deepseekApiKey}
+                  onChange={(e) => setDeepseekApiKey(e.target.value)}
+                />
+                <button
+                  onClick={() => setShowDeepseekKey(!showDeepseekKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {showDeepseekKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
               <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
-                Never shared. Stored locally in your browser.
+                Get your key at <span className="text-cyan-400">platform.deepseek.com</span> → API Keys
               </p>
+            </SettingGroup>
+
+            <SettingGroup
+              icon={<span style={{fontSize:13}}>🟢</span>}
+              color="rgba(16,185,129,"
+              title="OpenAI API Key (optional)"
+              description="For GPT-4.1, o4-mini, and OpenAI models"
+            >
+              <div className="relative">
+                <input
+                  type={showOpenaiKey ? 'text' : 'password'}
+                  className="input-glass w-full px-3 py-2.5 rounded-xl text-sm pr-10 font-mono"
+                  placeholder="sk-... (optional)"
+                  value={openaiApiKey}
+                  onChange={(e) => setOpenaiApiKey(e.target.value)}
+                />
+                <button
+                  onClick={() => setShowOpenaiKey(!showOpenaiKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {showOpenaiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </SettingGroup>
+
+            {/* Model Defaults */}
+            <SettingGroup
+              icon={<Bot size={15} />}
+              color="rgba(245,158,11,"
+              title="Model Defaults"
+              description="Default and fallback models for chat — can override per message"
+            >
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-muted)' }}>
+                    Default model (used for most tasks)
+                  </label>
+                  <ModelSelect value={defaultModel} onChange={setDefaultModel} />
+                </div>
+                <div>
+                  <label className="text-xs mb-1.5 block" style={{ color: 'var(--text-muted)' }}>
+                    Fallback model (if default fails)
+                  </label>
+                  <ModelSelect value={fallbackModel} onChange={setFallbackModel} />
+                </div>
+                <div className="flex gap-2 flex-wrap mt-2">
+                  <span className="text-xs px-2 py-1 rounded-lg" style={{ background:'rgba(16,163,127,0.15)', color:'#10a37f', border:'1px solid rgba(16,163,127,0.3)' }}>
+                    💰 DeepSeek V4 Flash — $0.14/M tokens
+                  </span>
+                  <span className="text-xs px-2 py-1 rounded-lg" style={{ background:'rgba(0,210,255,0.1)', color:'#00d2ff', border:'1px solid rgba(0,210,255,0.2)' }}>
+                    🔷 MiniMax — free
+                  </span>
+                </div>
+              </div>
             </SettingGroup>
 
             <SettingGroup
@@ -316,6 +406,78 @@ function SettingGroup({ icon, color, title, description, children }: {
         </div>
       </div>
       {children}
+    </div>
+  )
+}
+
+function ModelSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const providers = getProviders()
+  const selectedModel = MODELS[value]
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm input-glass hover:border-cyan-500/40 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          {selectedModel?.icon && <span>{selectedModel.icon}</span>}
+          <span className="text-white font-medium">{selectedModel?.name || 'Select model'}</span>
+        </span>
+        <span className="flex items-center gap-2">
+          <span
+            className="text-xs px-1.5 py-0.5 rounded"
+            style={{ background: `${selectedModel?.color}25`, color: selectedModel?.color, border: `1px solid ${selectedModel?.color}50` }}
+          >
+            {selectedModel?.providerName}
+          </span>
+          <ChevronDown size={14} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        </span>
+      </button>
+
+      {open && (
+        <div
+          className="absolute z-50 w-full mt-1 rounded-xl overflow-hidden shadow-xl"
+          style={{ background: 'rgba(15,20,30,0.98)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}
+        >
+          {providers.map((prov) => {
+            const models = getModelsByProvider(prov.id)
+            return (
+              <div key={prov.id}>
+                <div
+                  className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: prov.color, background: `${prov.color}10`, borderBottom: `1px solid ${prov.color}20` }}
+                >
+                  {prov.name} — {prov.id}
+                </div>
+                {models.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => { onChange(m.id); setOpen(false) }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 text-left transition-colors"
+                    style={{ borderLeft: value === m.id ? `2px solid ${m.color}` : '2px solid transparent' }}
+                  >
+                    <span className="text-sm">{m.icon}</span>
+                    <span className="flex-1">
+                      <span className="text-white font-medium">{m.name}</span>
+                      <span className="block text-xs" style={{ color: 'var(--text-muted)' }}>
+                        ${m.costPerMillion.input}/M in · {m.bestFor.slice(0,2).join(', ')}
+                      </span>
+                    </span>
+                    {value === m.id && (
+                      <span className="text-xs" style={{ color: m.color }}>✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Backdrop */}
+      {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
     </div>
   )
 }
