@@ -161,9 +161,9 @@ export const MODELS: Record<string, ModelConfig> = {
 
 // Default model for each provider (used when user hasn't picked anything)
 export const DEFAULTS = {
-  defaultModel: 'deepseek-v4-flash',
+  defaultModel: 'deepseek/deepseek-v4-flash',
   fallbackModel: 'MiniMax-M2.7-highspeed',
-  providerOrder: ['deepseek', 'anthropic', 'openai', 'minimax'] as const,
+  providerOrder: ['openrouter', 'deepseek', 'anthropic', 'openai', 'minimax'] as const,
 }
 
 // Get models by provider
@@ -187,3 +187,47 @@ export function getProviders(): Array<{ id: string; name: string; color: string 
   }
   return providers
 }
+
+// ─── OpenRouter ─────────────────────────────────────────────
+// DeepSeek V4 Flash via OpenRouter (cheaper than direct)
+'deepseek/deepseek-v4-flash': {
+  id: 'deepseek/deepseek-v4-flash',
+  name: 'DeepSeek V4 Flash',
+  provider: 'openrouter',
+  providerName: 'OpenRouter',
+  contextWindow: 1_000_000,
+  maxOutput: 32_768,
+  costPerMillion: { input: 0.10, output: 0.20 },
+  defaultFor: ['general', 'quick', 'free'],
+  bestFor: ['General chat', 'Drafts', 'Quick tasks', 'Free tier'],
+  color: '#7c3aed',
+  icon: '🔷',
+},
+
+// GPT-5.5 via OpenRouter (expensive but powerful)
+'openai/gpt-5.5': {
+  id: 'openai/gpt-5.5',
+  name: 'GPT-5.5',
+  provider: 'openrouter',
+  providerName: 'OpenRouter',
+  contextWindow: 1_000_000,
+  maxOutput: 128_000,
+  costPerMillion: { input: 5.0, output: 30.0 },
+  bestFor: ['Complex professional workloads', 'Research', 'Advanced reasoning'],
+  color: '#10a37f',
+  icon: '🟢',
+},
+
+// Qwen 3.6 Plus via OpenRouter
+'qwen/qwen3.6-plus': {
+  id: 'qwen/qwen3.6-plus',
+  name: 'Qwen 3.6 Plus',
+  provider: 'openrouter',
+  providerName: 'OpenRouter',
+  contextWindow: 1_000_000,
+  maxOutput: 32_768,
+  costPerMillion: { input: 0, output: 0 },  // free tier
+  bestFor: ['Free tier', 'General tasks'],
+  color: '#7c3aed',
+  icon: '🔷',
+},
