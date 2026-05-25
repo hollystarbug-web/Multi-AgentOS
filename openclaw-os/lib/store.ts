@@ -76,6 +76,7 @@ interface AppState {
   setApiKey: (key: string) => void
   setDeepseekApiKey: (key: string) => void
   setOpenaiApiKey: (key: string) => void
+  setNvidiaApiKey: (key: string) => void
   setOpenrouterApiKey: (key: string) => void
   setHetznerHost: (host: string) => void
   setMacMiniHost: (host: string) => void
@@ -188,6 +189,7 @@ export const useStore = create<AppState>()(
     (set) => ({
       apiKey: '',
       deepseekApiKey: '',
+      nvidiaApiKey: '',
       openaiApiKey: '',
       openrouterApiKey: '',
       hetznerHost: '',
@@ -196,14 +198,15 @@ export const useStore = create<AppState>()(
       setApiKey: (apiKey) => set({ apiKey }),
       setDeepseekApiKey: (deepseekApiKey) => set({ deepseekApiKey }),
       setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
+      setNvidiaApiKey: (nvidiaApiKey) => set({ nvidiaApiKey }),
       setOpenrouterApiKey: (openrouterApiKey) => set({ openrouterApiKey }),
       setHetznerHost: (hetznerHost) => set({ hetznerHost }),
       setMacMiniHost: (macMiniHost) => set({ macMiniHost }),
       setOpenclawUrl: (openclawUrl) => set({ openclawUrl }),
 
       // Model selection
-      selectedModel: 'deepseek-v4-flash',
-      defaultModel: 'deepseek-v4-flash',
+      selectedModel: 'nvidia/deepseek-v4-flash',
+      defaultModel: 'nvidia/deepseek-v4-flash',
       fallbackModel: 'MiniMax-M2.7-highspeed',
       setSelectedModel: (selectedModel) => set({ selectedModel }),
       setDefaultModel: (defaultModel) => set({ defaultModel }),
@@ -304,6 +307,7 @@ export const useStore = create<AppState>()(
       partialize: (s) => ({
         apiKey: s.apiKey,
         deepseekApiKey: s.deepseekApiKey,
+        nvidiaApiKey: s.nvidiaApiKey,
         openaiApiKey: s.openaiApiKey,
         openrouterApiKey: s.openrouterApiKey,
         hetznerHost: s.hetznerHost,

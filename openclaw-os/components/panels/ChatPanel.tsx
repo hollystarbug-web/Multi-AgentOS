@@ -21,9 +21,10 @@ export default function ChatPanel() {
   const apiKey = useStore((s) => s.apiKey)
   const deepseekApiKey = useStore((s) => s.deepseekApiKey)
   const openaiApiKey = useStore((s) => s.openaiApiKey)
+  const nvidiaApiKey = useStore((s) => s.nvidiaApiKey)
   const selectedModel = useStore((s) => s.selectedModel)
   const setSelectedModel = useStore((s) => s.setSelectedModel)
-  const defaultModel = useStore((s) => s.defaultModel || 'deepseek-v4-flash')
+  const defaultModel = useStore((s) => s.defaultModel || 'nvidia/deepseek-v4-flash')
   const fallbackModel = useStore((s) => s.fallbackModel || 'MiniMax-M2.7-highspeed')
   const vaultEnabled      = useStore((s) => s.vaultEnabled)
   const hetznerHost       = useStore((s) => s.hetznerHost)
@@ -84,6 +85,7 @@ export default function ChatPanel() {
           apiKey,
           deepseekApiKey,
           openaiApiKey,
+          nvidiaApiKey,
           model: selectedModel,
         }),
       })
@@ -179,6 +181,7 @@ export default function ChatPanel() {
         fallbackModel={fallbackModel}
         apiKey={apiKey}
         deepseekApiKey={deepseekApiKey}
+        nvidiaApiKey={nvidiaApiKey}
       />
 
       {/* Messages */}
@@ -231,17 +234,18 @@ export default function ChatPanel() {
 }
 
 /* ── Header ── */
-function ChatHeader({ onClear, selectedModel, onModelChange, fallbackModel, apiKey, deepseekApiKey }: {
+function ChatHeader({ onClear, selectedModel, onModelChange, fallbackModel, apiKey, deepseekApiKey, nvidiaApiKey }: {
   onClear: () => void
   selectedModel: string
   onModelChange: (m: string) => void
   fallbackModel: string
   apiKey: string
   deepseekApiKey: string
+  nvidiaApiKey: string
 }) {
   const [modelOpen, setModelOpen] = useState(false)
-  const model = MODELS[selectedModel] || MODELS['deepseek-v4-flash']
-  const hasAnyKey = apiKey || deepseekApiKey
+  const model = MODELS[selectedModel] || MODELS['nvidia/deepseek-v4-flash']
+  const hasAnyKey = apiKey || deepseekApiKey || nvidiaApiKey
 
   return (
     <div
@@ -292,7 +296,7 @@ function ChatHeader({ onClear, selectedModel, onModelChange, fallbackModel, apiK
           </div>
           {getProviders().map((prov) => {
             const models = getModelsByProvider(prov.id)
-            const hasProviderKey = prov.id === 'anthropic' ? !!apiKey : prov.id === 'deepseek' ? !!deepseekApiKey : true
+            const hasProviderKey = prov.id === 'anthropic' ? !!apiKey : prov.id === 'deepseek' ? !!deepseekApiKey : prov.id === 'nvidia' ? !!nvidiaApiKey : true
             return (
               <div key={prov.id}>
                 <div
