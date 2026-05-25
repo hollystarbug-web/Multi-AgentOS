@@ -9,11 +9,13 @@
 
 Justin wants to use the **right model for each task**, with cost as a primary consideration:
 
-- **Daily general chat** → cheapest possible (DeepSeek V4 Flash via OpenRouter)
+- **Daily general chat** → **NVIDIA NIM DeepSeek V4 Flash** (FREE)
 - **Quick free tasks** → MiniMax when available
 - **Complex reasoning** → Claude Opus 4 or GPT-5.5
-- **Coding** → DeepSeek Coder
+- **Coding** → DeepSeek V4 Flash (NVIDIA or OpenRouter)
 - **Heavy professional workloads** → GPT-5.5 (expensive but powerful)
+
+> **NVIDIA NIM is the primary default** — free, OpenAI-compatible, high limits. Get your key at [build.nvidia.com](https://build.nvidia.com) → API Keys.
 
 ---
 
@@ -28,6 +30,16 @@ All models are defined in `lib/models.ts` — single source of truth for UI, rou
 | `deepseek-v4-flash` | DeepSeek V4 Flash (Direct) | 1M | 32K | $0.14/M | $0.28/M | Direct API, slightly more expensive |
 | `deepseek-v4-pro` | DeepSeek V4 Pro (Direct) | 1M | 32K | $0.435/M | $0.87/M | Not yet configured |
 | `deepseek-chat` | DeepSeek V3 (Direct) | 64K | 8K | $0.14/M | $0.28/M | |
+
+### NVIDIA NIM (Provider: `nvidia`) — FREE
+
+| Model ID | Name | Context | Max Output | Input | Output | Notes |
+|---|---|---|---|---|---|---|
+| `nvidia/deepseek-v4-flash` | DeepSeek V4 Flash | 1M | 32K | **FREE** | **FREE** | ✅ PRIMARY DEFAULT — 1M context, OpenAI-compatible |
+
+> **Base URL:** `https://integrate.api.nvidia.com/v1`
+> **Get API key:** [build.nvidia.com](https://build.nvidia.com) → Sign up → API Keys → Create
+> **Internal model ID mapping:** `nvidia/deepseek-v4-flash` → `deepseek-ai/deepseek-v4-flash` at NVIDIA
 
 ### DeepSeek via OpenRouter (Provider: `openrouter`)
 
@@ -64,12 +76,12 @@ Defined in `lib/models.ts`:
 
 ```typescript
 export const DEFAULTS = {
-  defaultModel: 'deepseek/deepseek-v4-flash',   // ✅ cheapest, via OpenRouter
+  defaultModel: 'nvidia/deepseek-v4-flash',     // ✅ PRIMARY DEFAULT — FREE via NVIDIA NIM
   fallbackModel: 'MiniMax-M2.7-highspeed',       // ✅ free fallback
 }
 ```
 
-**Provider priority order:** `['openrouter', 'deepseek', 'anthropic', 'openai', 'minimax']`
+**Provider priority order:** `['nvidia', 'openrouter', 'deepseek', 'anthropic', 'openai', 'minimax']`
 
 ---
 
@@ -98,12 +110,13 @@ export const DEFAULTS = {
 The `/api/chat/route.ts` handles all provider routing. It detects the provider from the model ID prefix:
 
 ```typescript
-function getProvider(model: string): 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' {
+function getProvider(model: string): 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' | 'nvidia' {
   if (model.startsWith('claude-'))    return 'anthropic'
   if (model.startsWith('deepseek-')) return 'deepseek'      // direct deepseek (e.g. deepseek-v4-flash)
   if (model.startsWith('gpt-') || model.startsWith('o4-') || model.startsWith('o3-') || model.startsWith('chatgpt-')) return 'openai'
   if (model.startsWith('MiniMax-'))   return 'minimax'
-  if (model.includes('/'))            return 'openrouter'   // e.g. deepseek/deepseek-v4-flash, openai/gpt-5.5
+  if (model.startsWith('nvidia/'))    return 'nvidia'      // NVIDIA NIM (e.g. nvidia/deepseek-v4-flash)
+  if (model.includes('/'))            return 'openrouter'  // e.g. deepseek/deepseek-v4-flash, openai/gpt-5.5
   return 'openai'  // default fallback
 }
 ```
@@ -115,8 +128,9 @@ function getProvider(model: string): 'anthropic' | 'openai' | 'deepseek' | 'mini
 | `anthropic` | `https://api.anthropic.com/v1` |
 | `deepseek` | `https://api.deepseek.com/v1` |
 | `openai` | `https://api.openai.com/v1` |
-| `minimax` | `https://api.minimax.io/anthropic` |
+| `minimax` | `https://api.minimax.chat/v1` |
 | `openrouter` | `https://openrouter.ai/api/v1` |
+| `nvidia` | `https://integrate.api.nvidia.com/v1` |
 
 ### Request Body Format
 
@@ -134,6 +148,7 @@ All credentials stored in vault at `/root/.openclaw/workspace/.credentials/`:
 | `openrouter.json` | `{"api_key": "sk-or-..."}` — Justin's OpenRouter account |
 | `deepseek.json` | DeepSeek direct API key |
 | `servicem8.json` | ServiceM8 credentials |
+| `nvidia.json` | NVIDIA NIM API key (FREE — build.nvidia.com) |
 | `openai.json` | OpenAI API key |
 
 ### OpenRouter API Key
@@ -162,6 +177,7 @@ Also has API key fields for:
 - **DeepSeek API Key** — for direct DeepSeek access
 - **OpenAI API Key** — for OpenAI direct access
 - **OpenRouter API Key** — for OpenRouter models
+- **NVIDIA API Key** — for NVIDIA NIM (FREE DeepSeek V4 Flash)
 
 ---
 
@@ -169,12 +185,13 @@ Also has API key fields for:
 
 | Task | Recommended Model | Why |
 |---|---|---|
-| Daily general chat | `deepseek/deepseek-v4-flash` | Cheapest at $0.10/M |
+| Daily general chat | `nvidia/deepseek-v4-flash` | **FREE via NVIDIA NIM** — 1M context |
 | Quick free tasks | `MiniMax-M2.7-highspeed` | Completely free |
 | Complex reasoning | `claude-opus-4-5` | Best for deep analysis |
-| Coding | `deepseek/deepseek-v4-flash` | Good at code, cheap |
+| Coding | `nvidia/deepseek-v4-flash` | Good at code, FREE via NVIDIA |
 | Research / heavy workloads | `openai/gpt-5.5` | Most powerful, $5/M input |
-| Fallback if API is down | `MiniMax-M2.7-highspeed` | Free, reliable |
+| Fallback if NVIDIA is down | `deepseek/deepseek-v4-flash` | Via OpenRouter at $0.10/M |
+| Fallback if all paid APIs down | `MiniMax-M2.7-highspeed` | Free, reliable |
 
 ---
 
@@ -231,4 +248,4 @@ The UI shows cost indicators in the model selector:
 
 ---
 
-*Last updated: 2026-05-25 | Added GPT-5.5, OpenRouter DeepSeek V4 Flash, Qwen 3.6 Plus*
+*Last updated: 2026-05-25 | Added NVIDIA NIM as primary default (FREE DeepSeek V4 Flash), multi-provider routing*

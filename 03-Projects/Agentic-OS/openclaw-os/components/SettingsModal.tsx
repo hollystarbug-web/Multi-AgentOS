@@ -13,11 +13,13 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const [openclawUrl, setOpenclawUrl] = useState(store.openclawUrl)
   const [deepseekApiKey, setDeepseekApiKey] = useState(store.deepseekApiKey)
   const [openaiApiKey, setOpenaiApiKey] = useState(store.openaiApiKey)
+  const [nvidiaApiKey, setNvidiaApiKey] = useState(store.nvidiaApiKey)
   const [defaultModel, setDefaultModel] = useState(store.defaultModel || DEFAULTS.defaultModel)
   const [fallbackModel, setFallbackModel] = useState(store.fallbackModel || DEFAULTS.fallbackModel)
   const [showKey, setShowKey] = useState(false)
   const [showDeepseekKey, setShowDeepseekKey] = useState(false)
   const [showOpenaiKey, setShowOpenaiKey] = useState(false)
+  const [showNvidiaKey, setShowNvidiaKey] = useState(false)
   const [saved, setSaved] = useState(false)
   // Vault settings
   const [vaultEnabled, setVaultEnabled] = useState(store.vaultEnabled)
@@ -30,6 +32,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
     store.setApiKey(apiKey)
     store.setDeepseekApiKey(deepseekApiKey)
     store.setOpenaiApiKey(openaiApiKey)
+    store.setNvidiaApiKey(nvidiaApiKey)
     store.setHetznerHost(hetznerHost)
     store.setMacMiniHost(macMiniHost)
     store.setOpenclawUrl(openclawUrl)
@@ -135,6 +138,36 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
               </div>
               <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
                 Get your key at <span className="text-cyan-400">platform.deepseek.com</span> → API Keys
+              </p>
+            </SettingGroup>
+
+            <SettingGroup
+              icon={<span style={{fontSize:13}}>🟢</span>}
+              color="rgba(16,185,129,"
+            <SettingGroup
+              icon={<span style={{fontSize:13}}>🟢</span>}
+              color="rgba(118,185,0,"
+              title="NVIDIA API Key (FREE)"
+              description="DeepSeek V4 Flash via NVIDIA NIM — FREE. Get key at build.nvidia.com"
+            >
+              <div className="relative">
+                <input
+                  type={showNvidiaKey ? 'text' : 'password'}
+                  className="input-glass w-full px-3 py-2.5 rounded-xl text-sm pr-10 font-mono"
+                  placeholder="nvapi-... (FREE — build.nvidia.com)"
+                  value={nvidiaApiKey}
+                  onChange={(e) => setNvidiaApiKey(e.target.value)}
+                />
+                <button
+                  onClick={() => setShowNvidiaKey(!showNvidiaKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {showNvidiaKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
+                Sign up at <span className="text-green-400">build.nvidia.com</span> → API Keys → Create API Key
               </p>
             </SettingGroup>
 

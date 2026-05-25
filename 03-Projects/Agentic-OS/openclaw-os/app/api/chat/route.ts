@@ -4,11 +4,12 @@ export const runtime = 'nodejs'
 
 // ─── Provider detection ────────────────────────────────────────────────────────
 
-function getProvider(model: string): 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' {
+function getProvider(model: string): 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' | 'nvidia' {
   if (model.startsWith('claude-')) return 'anthropic'
   if (model.startsWith('deepseek-')) return 'deepseek'
   if (model.startsWith('gpt-') || model.startsWith('o4-') || model.startsWith('o3-') || model.startsWith('chatgpt-')) return 'openai'
   if (model.startsWith('MiniMax-')) return 'minimax'
+  if (model.startsWith('nvidia/')) return 'nvidia'  // NVIDIA NIM (e.g. nvidia/deepseek-v4-flash)
   if (model.includes('/')) return 'openrouter'  // e.g. qwen/qwen3.6-plus via openrouter
   return 'openai'  // default fallback
 }
@@ -18,8 +19,9 @@ function getBaseUrl(provider: string): string {
     case 'anthropic': return 'https://api.anthropic.com/v1'
     case 'deepseek': return 'https://api.deepseek.com/v1'
     case 'openai': return 'https://api.openai.com/v1'
-    case 'minimax': return 'https://api.minimax.io/anthropic'
+    case 'minimax': return 'https://api.minimax.chat/v1'
     case 'openrouter': return 'https://openrouter.ai/api/v1'
+    case 'nvidia': return 'https://integrate.api.nvidia.com/v1'
     default: return 'https://api.openai.com/v1'
   }
 }
@@ -36,6 +38,7 @@ function getHeaders(provider: string, key: string, model: string): Record<string
     case 'deepseek':
     case 'openai':
     case 'openrouter':
+    case 'nvidia':
       return {
         'Authorization': `Bearer ${key}`,
         'content-type': 'application/json',
@@ -73,9 +76,15 @@ function buildRequestBody(provider: string, model: string, messages: Array<{ rol
     case 'deepseek':
     case 'openai':
     case 'minimax':
-    case 'openrouter': {
+    case 'openrouter':
+    case 'nvidia': {
+      // NVIDIA NIM: map internal model ID to NVIDIA's model name
+      let actualModel = model
+      if (provider === 'nvidia') {
+        actualModel = model.replace('nvidia/', 'deepseek-ai/') // nvidia/deepseek-v4-flash → deepseek-ai/deepseek-v4-flash
+      }
       return {
-        model,
+        model: actualModel,
         messages: msgs.map(m => ({ role: m.role, content: m.content })),
         stream: true,
         ...(provider === 'minimax' ? { max_tokens: 8192 } : {}),
@@ -97,7 +106,8 @@ function extractDelta(provider: string, event: Record<string, unknown>): string 
       case 'deepseek':
       case 'openai':
       case 'minimax':
-      case 'openrouter': {
+      case 'openrouter':
+      case 'nvidia': {
         const choices = event.choices as Array<Record<string, unknown>> | undefined
         if (choices && choices.length > 0) {
           const delta = choices[0].delta as Record<string, unknown> | undefined
@@ -117,7 +127,8 @@ function isDoneEvent(provider: string, event: Record<string, unknown>): boolean 
     case 'deepseek':
     case 'openai':
     case 'minimax':
-    case 'openrouter': {
+    case 'openrouter':
+    case 'nvidia': {
       const choices = event.choices as Array<Record<string, unknown>> | undefined
       return choices?.[0]?.finish_reason != null
     }
@@ -141,16 +152,17 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { messages, apiKey, deepseekApiKey, openaiApiKey, model: requestedModel } = body as {
+  const { messages, apiKey, deepseekApiKey, openaiApiKey, nvidiaApiKey, model: requestedModel } = body as {
     messages: Array<{ role: string; content: string }>
     apiKey?: string
     deepseekApiKey?: string
     openaiApiKey?: string
+    nvidiaApiKey?: string
     model?: string
   }
 
-  // Default to deepseek-v4-flash if no model specified
-  const model = (requestedModel as string) || 'deepseek-v4-flash'
+  // Default to nvidia/deepseek-v4-flash if no model specified (FREE)
+  const model = (requestedModel as string) || 'nvidia/deepseek-v4-flash'
   const provider = getProvider(model)
 
   // Get the right API key for this provider
@@ -161,6 +173,7 @@ export async function POST(req: NextRequest) {
     case 'openai': key = (openaiApiKey as string) || ''; break
     case 'minimax': key = (apiKey as string) || ''; break  // MiniMax uses same as Anthropic format
     case 'openrouter': key = (openaiApiKey as string) || process.env.OPENROUTER_API_KEY || ''; break
+    case 'nvidia': key = (nvidiaApiKey as string) || ''; break
     default: key = (apiKey as string) || ''
   }
 
@@ -186,6 +199,7 @@ export async function POST(req: NextRequest) {
     case 'openai':
     case 'minimax':
     case 'openrouter':
+    case 'nvidia':
       fetchUrl = `${baseUrl}/chat/completions`
       fetchOptions = { method: 'POST', headers, body: JSON.stringify(requestBody) }
       break
