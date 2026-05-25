@@ -225,3 +225,15 @@
 - [ ] Test Journal panel — add entry with voice input
 - [ ] Verify Goals saves to `03-Projects/Agentic-OS/goals/YYYY-MM.md`
 - [ ] Verify Journal saves to `03-Projects/Agentic-OS/journal/YYYY-MM-DD.md`
+
+### Task 32 — Agent Sidebar Redesign
+- [x] Redesigned Sidebar.tsx: wider (180px vs 68px), persistent labels always visible
+- [x] Two sections: AGENTS (top) and PANELS (bottom), with dividers
+- [x] Provider badge (colored dot) for each agent — shows which provider
+- [x] Agents: Holly (Sparkles), Kryten (Bot), Sally (ClipboardList), Grim (Anchor), Oscar (Star), Reggie (Shield) — OpenClaw; Claude (Brain) — Anthropic; Hermes (Zap) — Custom
+- [x] Created AgentPlaceholder.tsx — shows agent name, icon, provider badge, "coming soon" message
+- [x] Updated Dashboard.tsx — agent panel routing, fallback for unknown panels
+- [x] Added agent panel accents to Dashboard
+- [x] Node status section at sidebar bottom with persistent labels
+
+Note: Agent chat panels not yet built — clicking an agent shows the placeholder card.

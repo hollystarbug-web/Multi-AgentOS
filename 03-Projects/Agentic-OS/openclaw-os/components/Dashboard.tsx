@@ -14,6 +14,13 @@ import OpenclawPanel from './panels/OpenclawPanel'
 import OverviewPanel from './panels/OverviewPanel'
 import JournalPanel from './panels/JournalPanel'
 import GoalsPanel from './panels/GoalsPanel'
+import AgentPlaceholder from './panels/AgentPlaceholder'
+
+// Agent panel IDs (these don't have real panels yet — they show AgentPlaceholder)
+const AGENT_PANELS = [
+  'agent-holly', 'agent-kryten', 'agent-sally', 'agent-grim',
+  'agent-oscar', 'agent-reggie', 'agent-claude', 'agent-hermes',
+]
 
 const PANELS: Record<string, React.ReactNode> = {
   overview: <OverviewPanel />,
@@ -24,17 +31,35 @@ const PANELS: Record<string, React.ReactNode> = {
   openclaw: <OpenclawPanel />,
   journal:  <JournalPanel />,
   goals:    <GoalsPanel />,
+  // Agent placeholders
+  'agent-holly':  <AgentPlaceholder agentId="agent-holly" />,
+  'agent-kryten': <AgentPlaceholder agentId="agent-kryten" />,
+  'agent-sally':  <AgentPlaceholder agentId="agent-sally" />,
+  'agent-grim':   <AgentPlaceholder agentId="agent-grim" />,
+  'agent-oscar':  <AgentPlaceholder agentId="agent-oscar" />,
+  'agent-reggie': <AgentPlaceholder agentId="agent-reggie" />,
+  'agent-claude': <AgentPlaceholder agentId="agent-claude" />,
+  'agent-hermes': <AgentPlaceholder agentId="agent-hermes" />,
 }
 
 const PANEL_ACCENT: Record<string, string> = {
   overview: 'rgba(255,255,255,',
-  chat:     'rgba(139,92,246,',
+  chat:     'rgba(168,85,247,',
   nodes:    'rgba(6,182,212,',
   missions: 'rgba(236,72,153,',
   terminal: 'rgba(16,185,129,',
   openclaw: 'rgba(245,158,11,',
   journal:  'rgba(168,85,247,',
   goals:    'rgba(249,115,22,',
+  // Agent panels
+  'agent-holly':  'rgba(6,182,212,',
+  'agent-kryten': 'rgba(249,115,22,',
+  'agent-sally':  'rgba(139,92,246,',
+  'agent-grim':   'rgba(239,68,68,',
+  'agent-oscar':  'rgba(251,191,36,',
+  'agent-reggie': 'rgba(16,185,129,',
+  'agent-claude': 'rgba(168,85,247,',
+  'agent-hermes': 'rgba(251,191,36,',
 }
 
 export default function Dashboard() {
@@ -101,7 +126,7 @@ export default function Dashboard() {
                 }}
               />
               <div className="h-full overflow-hidden">
-                {PANELS[activePanel]}
+                {PANELS[activePanel] ?? <AgentPlaceholder agentId={activePanel} />}
               </div>
             </motion.div>
           </AnimatePresence>
