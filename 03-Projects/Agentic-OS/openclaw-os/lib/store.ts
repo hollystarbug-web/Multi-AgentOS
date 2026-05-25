@@ -52,6 +52,16 @@ export interface JournalEntry {
   timestamp: Date
 }
 
+export interface Goal {
+  id: string
+  title: string
+  description: string
+  status: 'pending' | 'completed' | 'archived'
+  priority: 'low' | 'medium' | 'high'
+  createdAt: Date
+  completedAt?: Date
+}
+
 export type VaultSaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface AppState {
@@ -100,6 +110,12 @@ interface AppState {
   journalEntries: JournalEntry[]
   addJournalEntry: (e: JournalEntry) => void
   deleteJournalEntry: (id: string) => void
+
+  // Goals
+  goals: Goal[]
+  addGoal: (g: Goal) => void
+  updateGoal: (id: string, updates: Partial<Goal>) => void
+  deleteGoal: (id: string) => void
 
   // Terminal logs
   logs: LogEntry[]
@@ -238,6 +254,13 @@ export const useStore = create<AppState>()(
       deleteJournalEntry: (id) =>
         set((s) => ({ journalEntries: s.journalEntries.filter((e) => e.id !== id) })),
 
+      goals: [],
+      addGoal: (g) => set((s) => ({ goals: [g, ...s.goals] })),
+      updateGoal: (id, updates) =>
+        set((s) => ({ goals: s.goals.map((g) => (g.id === id ? { ...g, ...updates } : g)) })),
+      deleteGoal: (id) =>
+        set((s) => ({ goals: s.goals.filter((g) => g.id !== id) })),
+
       logs: [],
       addLog: (log) => set((s) => ({ logs: [log, ...s.logs].slice(0, 500) })),
       clearLogs: () => set({ logs: [] }),
@@ -262,6 +285,7 @@ export const useStore = create<AppState>()(
         messages: s.messages,
         missions: s.missions,
         journalEntries: s.journalEntries,
+        goals: s.goals,
       }),
     }
   )

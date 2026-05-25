@@ -1,6 +1,6 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, Monitor, Target, Terminal, Globe, LayoutGrid, BookOpen } from 'lucide-react'
+import { MessageSquare, Monitor, Target, Terminal, Globe, LayoutGrid, BookOpen, Flag } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import AgentAvatar from '@/components/ui/AgentAvatar'
 
@@ -12,6 +12,7 @@ const NAV = [
   { id: 'terminal',  label: 'Terminal',         icon: Terminal,      color: 'rgba(16,185,129,' },
   { id: 'openclaw',  label: 'Openclaw',         icon: Globe,         color: 'rgba(245,158,11,' },
   { id: 'journal',   label: 'Journal',          icon: BookOpen,      color: 'rgba(168,85,247,' },
+  { id: 'goals',     label: 'Goals',            icon: Flag,          color: 'rgba(249,115,22,' },
 ]
 
 const AVATAR_MAP: Record<string, string> = {

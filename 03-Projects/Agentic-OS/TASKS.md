@@ -202,3 +202,26 @@
 ---
 
 *Last updated: 2026-05-25 | Task 17 complete*
+
+### Task 30 — Goals Panel (New Feature)
+- [x] Added Goal type and goals slice to Zustand store (`lib/store.ts`)
+- [x] Added goals vault helpers: `goalsFilePath()`, `goalsFileHeader()`, `formatGoalEntry()` (`lib/vault.ts`)
+- [x] Built `GoalsPanel.tsx` — full goals panel with checkbox list, priority, voice input, vault save
+- [x] Monthly goal files: `goals/YYYY-MM.md` — one file per month, checkboxes
+- [x] Vault auto-save on goal add/update/archive
+- [x] GoalsPanel wired into Dashboard (panel key: `goals`) and Sidebar (icon: Flag)
+
+### Task 31 — Journal Voice Input (Enhancement)
+- [x] Added voice input (mic button) to JournalPanel textarea
+- [x] Uses existing `useVoiceInput` hook
+- [x] Live interim transcript shown while recording
+- [x] Appends transcribed text to textarea on phrase completion
+- [x] Mic button toggles red when actively listening
+
+### Task 18 — Deploy to VPS & Obsidian Vault Setup
+- [ ] Run `npm install` on Mac to install `ssh2` + `@types/ssh2`
+- [ ] Run `npm run dev` and verify app at `http://localhost:3000`
+- [ ] Test Goals panel — add a goal with voice, confirm saves to vault
+- [ ] Test Journal panel — add entry with voice input
+- [ ] Verify Goals saves to `03-Projects/Agentic-OS/goals/YYYY-MM.md`
+- [ ] Verify Journal saves to `03-Projects/Agentic-OS/journal/YYYY-MM-DD.md`
