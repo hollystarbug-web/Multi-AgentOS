@@ -122,6 +122,27 @@
 
 ## 🔜 Upcoming Tasks
 
+
+### Task 33 — Model System (OpenRouter + Multi-Provider Routing)
+- [x] Added OpenRouter provider to OpenClaw config (`~/.openclaw/openclaw.json`) — API key `sk-or-…da38`
+- [x] Added OpenRouter models: `deepseek/deepseek-v4-flash`, `openai/gpt-5.5`, `qwen/qwen3.6-plus`
+- [x] Updated `lib/models.ts` — added OpenRouter models, set `deepseek/deepseek-v4-flash` as default, `MiniMax-M2.7-highspeed` as fallback
+- [x] Updated `lib/store.ts` — added `selectedModel`, `defaultModel`, `fallbackModel`, `deepseekApiKey`, `openaiApiKey`
+- [x] Updated `SettingsModal.tsx` — added DeepSeek API Key, OpenAI API Key, OpenRouter API Key, Model Defaults section
+- [x] Updated `ChatPanel.tsx` — model selector dropdown in ChatHeader, shows current model + streaming status
+- [x] Rewrote `app/api/chat/route.ts` — multi-provider routing (Anthropic/OpenAI/DeepSeek/MiniMax/OpenRouter)
+- [x] Created `MODELS.md` — comprehensive model documentation (registry, routing, costs, credentials)
+- [x] Updated `README.md` — added Model System section with strategy and flow
+
+Note: OpenRouter API key (`sk-or-…da38`) is Justin's account — stored in vault credentials.
+
+### Task 34 — Per-Agent Chat Panels (Coming Next)
+- [ ] Build dedicated chat panel for each agent (Holly, Kryten, Sally, etc.)
+- [ ] Each agent panel pre-configured with that agent's system prompt
+- [ ] Agent can use any model (user selects from model dropdown)
+- [ ] Panel shows agent name, avatar, provider badge
+
+
 ### Task 18 — Deploy to VPS & Obsidian Vault Setup
 - [ ] Run `npm install` on Mac to install `ssh2` + `@types/ssh2`
 - [ ] Run `npm run dev` and verify app at `http://localhost:3000`
@@ -201,7 +222,7 @@
 
 ---
 
-*Last updated: 2026-05-25 | Task 17 complete*
+*Last updated: 2026-05-25 | Tasks 30, 31, 32, 33 complete — model system added*
 
 ### Task 30 — Goals Panel (New Feature)
 - [x] Added Goal type and goals slice to Zustand store (`lib/store.ts`)
@@ -236,4 +257,4 @@
 - [x] Added agent panel accents to Dashboard
 - [x] Node status section at sidebar bottom with persistent labels
 
-Note: Agent chat panels not yet built — clicking an agent shows the placeholder card.
+Note: Agent chat panels not yet built — see Task 34 — clicking an agent shows the placeholder card.
