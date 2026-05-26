@@ -80,15 +80,20 @@
 - Multi-provider chat routing: Anthropic, DeepSeek, OpenAI, MiniMax, OpenRouter
 - Vault auto-save: Goals, Journal, Chat, Missions → git on VPS
 
-### Model Defaults
-- Default: `deepseek/deepseek-v4-flash` via OpenRouter ($0.10/M input)
-- Fallback: `MiniMax-M2.7-highspeed` (free)
-- Expensive option: `openai/gpt-5.5` via OpenRouter ($5/M input)
+### Model Defaults (Updated 2026-05-26)
+- **Main:** `MiniMax-M2.7-highspeed` (minimax27) — free, reasoning enabled, fast
+- Alternative: `deepseek/deepseek-v4-flash` via OpenRouter (free tier)
+- Alternative: `nvidia/deepseek-v4-flash` via NVIDIA NIM (FREE — build.nvidia.com)
+- Paid/complex: `openai/gpt-5.5` thinking (expensive, use selectively)
+- Fallback: `qwen/qwen3.6-plus` via OpenRouter (free tier)
+- Full hierarchy: see `07-Reference/model-preferences.md`
 
 ### Credentials (vault: `/root/.openclaw/workspace/.credentials/`)
 - `openrouter.json` — Justin's OpenRouter key `sk-or-…da38`
 - `deepseek.json` — DeepSeek direct key
+- `nvidia.json` — NVIDIA NIM API key (FREE DeepSeek V4 Flash via build.nvidia.com)
 - `servicem8.json` — ServiceM8 credentials
+- `openai.json` — OpenAI API key (for GPT-5.5 direct)
 
 ### Git Workflow
 - Remote: `https://github.com/hollystarbug-web/openclaw-wiki`
