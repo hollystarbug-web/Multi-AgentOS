@@ -68,7 +68,7 @@ export default function JournalPanel() {
     addEntry(entry)
 
     // Save to vault if enabled
-    if (vaultEnabled && hetznerHost) {
+    if (vaultEnabled) {
       setVaultSaveStatus('saving')
       const date    = todayStr()
       const filePath = journalFilePath(date)

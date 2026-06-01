@@ -196,7 +196,7 @@ export default function AgentChatPanel({ agentId }: AgentChatPanelProps) {
     } finally {
       setIsStreaming(false)
 
-      if (vaultEnabled && hetznerHost) {
+      if (vaultEnabled) {
         const assistantMsg = (useStore.getState().agentMessages[agentId] || []).find(
           (m) => m.id === assistantId
         )

@@ -1,21 +1,30 @@
 /**
  * POST /api/vault/save
  *
- * Writes content to a file on the Hetzner VPS via SSH, then runs:
- *   cd /root/OpenClaw-Wiki && git add . && git commit -m "..." && git push
+ * Two modes:
+ *   1. SAME-HOST (default): writes directly to local disk + git commit/push.
+ *      No SSH, no credentials. The dashboard and the vault are on the same
+ *      VPS, so this is the common path. Auto-enabled.
+ *   2. REMOTE HOST: SSHes to a remote vault host (e.g. a Mac Mini),
+ *      then writes + commits. Requires sshKeyPath or sshPassword.
  *
  * Content is base64-encoded before transmission to safely handle any
  * special characters, newlines, quotes, etc. in the markdown.
- *
- * Auth: SSH private key (read from MacBook filesystem) or password.
  */
 
 import { NextRequest } from 'next/server'
-import { Client } from 'ssh2'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+import { exec as childExec } from 'child_process'
+import { promisify } from 'util'
 import { VAULT_ROOT } from '@/lib/vault'
+
+// Use a structural type for SSHClient so we don't import the ssh2 module
+// at the top level (its native .node binary crashes webpack bundling).
+type SSHClient = any
+
+const pexec = promisify(childExec)
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -25,11 +34,13 @@ interface SaveRequest {
   content: string
   append: boolean
   commitMessage: string
-  host: string
-  sshUser: string
+  host?: string         // empty / 'localhost' / '127.0.0.1' = same-host (no SSH)
+  sshUser?: string
   sshKeyPath?: string
   sshPassword?: string
 }
+
+const isLocalHost = (h?: string) => !h || h === 'localhost' || h === '127.0.0.1' || h === '::1'
 
 // Expand ~ to home directory
 function expandPath(p: string): string {
@@ -39,7 +50,7 @@ function expandPath(p: string): string {
 }
 
 // Run a single command over an open SSH connection, return stdout
-function exec(conn: Client, command: string): Promise<string> {
+function exec(conn: SSHClient, command: string): Promise<string> {
   return new Promise((resolve, reject) => {
     conn.exec(command, (err: Error | undefined, stream: any) => {
       if (err) return reject(err)
@@ -56,7 +67,54 @@ function exec(conn: Client, command: string): Promise<string> {
   })
 }
 
+/**
+ * Same-host save: write directly to the local vault, then git commit + push.
+ * No SSH, no credentials. The dashboard lives on the same VPS as the vault,
+ * so this is the common path.
+ */
+async function doLocalSave(body: SaveRequest): Promise<void> {
+  const { remotePath, content, append, commitMessage } = body
+  const dir = path.posix.dirname(remotePath)
+  const localDir = dir.replace(/^\/root\/OpenClaw-Wiki/, VAULT_ROOT)
+
+  // 1. Ensure directory exists
+  fs.mkdirSync(localDir, { recursive: true })
+
+  // 2. Write or append
+  if (append && fs.existsSync(remotePath)) {
+    fs.appendFileSync(remotePath, content, 'utf8')
+  } else {
+    fs.writeFileSync(remotePath, content, 'utf8')
+  }
+
+  // 3. Git: add, commit, push (best-effort — vault save should not fail on git issues)
+  try {
+    await pexec(
+      `cd ${VAULT_ROOT} && git add . && git -c user.email="holly@openclaw.local" -c user.name="Holly" commit -m ${JSON.stringify(commitMessage)} --allow-empty`,
+      { timeout: 30_000, shell: '/bin/bash' },
+    )
+  } catch (e: any) {
+    // Commit might fail if nothing changed — that's fine. We still wrote the file.
+    if (!/nothing to commit/i.test(e?.message ?? '')) {
+      console.warn('[vault/save] git commit warning:', e?.message)
+    }
+  }
+  // Push is async and best-effort — if remote is missing it just no-ops.
+  try {
+    await pexec(`cd ${VAULT_ROOT} && git push origin master 2>&1 || git push origin main 2>&1 || true`, {
+      timeout: 60_000,
+      shell: '/bin/bash',
+    })
+  } catch {
+    // ignore
+  }
+}
+
 async function doSave(body: SaveRequest): Promise<void> {
+  // Dynamic import — ssh2 ships a native .node binary that webpack chokes on.
+  // We only pay the cost when the user actually configures a remote host.
+  const { Client } = await import('ssh2')
+
   const {
     remotePath, content, append,
     commitMessage, host, sshUser,
@@ -93,7 +151,7 @@ async function doSave(body: SaveRequest): Promise<void> {
   const op = append ? '>>' : '>'
 
   await new Promise<void>((resolve, reject) => {
-    const conn = new Client()
+    const conn: SSHClient = new Client()
 
     conn.on('ready', async () => {
       try {
@@ -101,7 +159,6 @@ async function doSave(body: SaveRequest): Promise<void> {
         await exec(conn, `mkdir -p "${remoteDir}"`)
 
         // 2. Write file (base64 → decode → write/append)
-        //    Using printf + base64 -d for reliable multi-line content
         await exec(conn, `printf '%s' "$(echo '${b64}' | base64 -d)" ${op} "${remotePath}"`)
 
         // 3. Git: add, commit, push
@@ -136,18 +193,30 @@ export async function POST(req: NextRequest) {
   }
 
   const { remotePath, content, host, sshUser } = body
-  if (!remotePath || content === undefined || !host || !sshUser) {
+  if (!remotePath || content === undefined) {
     return Response.json(
-      { error: 'Missing required fields: remotePath, content, host, sshUser' },
+      { error: 'Missing required fields: remotePath, content' },
       { status: 400 },
     )
   }
 
   try {
-    await doSave(body)
-    return Response.json({ success: true })
+    if (isLocalHost(host)) {
+      // Same-host fast path — no SSH, no creds needed.
+      await doLocalSave(body)
+      return Response.json({ success: true, mode: 'local' })
+    } else {
+      if (!sshUser) {
+        return Response.json(
+          { error: 'sshUser is required for remote (non-local) host' },
+          { status: 400 },
+        )
+      }
+      await doSave(body)
+      return Response.json({ success: true, mode: 'remote' })
+    }
   } catch (err: any) {
     console.error('[vault/save]', err?.message)
-    return Response.json({ error: err?.message ?? 'SSH save failed' }, { status: 500 })
+    return Response.json({ error: err?.message ?? 'Save failed' }, { status: 500 })
   }
 }

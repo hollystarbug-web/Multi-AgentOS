@@ -244,7 +244,7 @@ export const useStore = create<AppState>()(
       setFallbackModel: (fallbackModel) => set({ fallbackModel }),
 
       // Vault
-      vaultEnabled: false,
+      vaultEnabled: true,
       vaultSshUser: 'root',
       vaultSshKeyPath: '',
       vaultSshPassword: '',
@@ -360,10 +360,9 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'openclaw-os-state',
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version) => {
         // v1 → v2: migrate master 'messages' into agentMessages['agent-claude'].
-        // Anything in the old master bucket becomes Claude's history.
         if (version < 2 && persistedState) {
           const oldMessages = persistedState.messages || []
           if (oldMessages.length > 0 && !persistedState.agentMessages) {
@@ -372,6 +371,13 @@ export const useStore = create<AppState>()(
           if (!persistedState.agentModels) persistedState.agentModels = {}
           if (!persistedState.userModels) persistedState.userModels = {}
           if (!persistedState.providerEndpoints) persistedState.providerEndpoints = {}
+        }
+        // v2 → v3: default vault to enabled (per Justin, 2026-06-01 — vault
+        // saves should be automatic, not opt-in).
+        if (version < 3 && persistedState) {
+          if (persistedState.vaultEnabled === undefined) {
+            persistedState.vaultEnabled = true
+          }
         }
         return persistedState
       },
