@@ -17,6 +17,7 @@ import JournalPanel from './panels/JournalPanel'
 import GoalsPanel from './panels/GoalsPanel'
 import AgentChatPanel from './panels/AgentChatPanel'
 import ModelRail from './ModelRail'
+import BugReportButton from './BugReportButton'
 import { AGENTS, type AgentId } from '@/lib/agents'
 
 const PANEL_ACCENT: Record<string, string> = {
@@ -179,6 +180,8 @@ export default function Dashboard() {
       <AnimatePresence>
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       </AnimatePresence>
+
+      <BugReportButton />
     </div>
   )
 }
