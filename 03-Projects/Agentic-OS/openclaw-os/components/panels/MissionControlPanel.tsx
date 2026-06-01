@@ -44,7 +44,7 @@ export default function MissionControlPanel() {
 
   // Saves a single mission entry to the vault's missions.md (always appends)
   const saveToMissionsVault = async (mission: Mission) => {
-    if (!vaultEnabled || !hetznerHost) return
+    if (!vaultEnabled) return
     setVaultSaveStatus('saving')
     const isFirstMission = missions.length === 0
     const chunk = (isFirstMission ? missionsFileHeader() : '') +
