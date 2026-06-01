@@ -261,7 +261,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
               icon={<BookMarked size={15} />}
               color="rgba(168,85,247,1)"
               title="OpenClaw-Wiki Vault"
-              description="Auto-save chats, journal, and missions via SSH → git"
+              description="Auto-save chats, journal, goals, and missions. Local (same-host) by default; SSH fallback for remote."
             >
               {/* Enable toggle */}
               <button
@@ -286,6 +286,22 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                   {vaultEnabled ? 'Vault sync enabled' : 'Vault sync disabled'}
                 </span>
               </button>
+
+              {vaultEnabled && !hetznerHost && (
+                <div
+                  className="text-xs mb-3 px-2 py-1.5 rounded-lg flex items-center gap-2"
+                  style={{
+                    background: 'rgba(34,197,94,0.1)',
+                    border: '1px solid rgba(34,197,94,0.3)',
+                    color: 'rgba(134,239,172,1)',
+                  }}
+                >
+                  <span>✓</span>
+                  <span>
+                    <strong>Local mode</strong> — saving directly to <code className="font-mono">/root/OpenClaw-Wiki/Agentic OS/</code> on this VPS. No SSH needed.
+                  </span>
+                </div>
+              )}
 
               <AnimatePresence>
                 {vaultEnabled && (

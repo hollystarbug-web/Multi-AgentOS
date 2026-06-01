@@ -2,17 +2,18 @@
  * Vault helpers — OpenClaw-Wiki conventions
  *
  * Vault root on Hetzner VPS: /root/OpenClaw-Wiki/
- * Agentic OS project folder:  03-Projects/Agentic-OS/
+ * Agentic OS folder:         Agentic OS/        (per Justin, 2026-06-01)
  *
- * Structure:
- *   03-Projects/Agentic-OS/chats/YYYY-MM-DD.md     ← daily chat logs
- *   03-Projects/Agentic-OS/journal/YYYY-MM-DD.md   ← daily journal
- *   03-Projects/Agentic-OS/missions.md             ← rolling mission log
- *   03-Projects/Agentic-OS/goals/YYYY-MM.md        ← monthly goals (checkbox lists)
+ * Structure (auto-saved):
+ *   Agentic OS/Chats/<agent-slug>/YYYY-MM-DD.md   ← daily chat logs per agent
+ *   Agentic OS/Chats/YYYY-MM-DD.md                ← legacy / no-agent
+ *   Agentic OS/Journal/YYYY-MM-DD.md              ← daily journal
+ *   Agentic OS/Goals/YYYY-MM.md                   ← monthly goals
+ *   Agentic OS/Missions.md                        ← rolling mission log
  */
 
 export const VAULT_ROOT  = '/root/OpenClaw-Wiki'
-export const PROJECT_DIR = '03-Projects/Agentic-OS'
+export const PROJECT_DIR = 'Agentic OS'
 
 // ── Path builders ────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ export function chatFileHeader(date: string, agentName?: string): string {
     frontmatter(title, ['agentic-os', 'chat', 'daily-log'], date),
     `# 🤖 ${title}`,
     '',
-    `> Auto-saved from Agentic OS dashboard · [[${PROJECT_DIR.replace('03-Projects/', '')}]]`,
+    `> Auto-saved from Agentic OS dashboard · [[Agentic OS]]`,
     '',
     '---',
     '',
@@ -105,7 +106,7 @@ export function journalFileHeader(date: string): string {
     frontmatter(`Journal — ${date}`, ['agentic-os', 'journal', 'daily-log'], date),
     `# 📓 Journal — ${date}`,
     '',
-    `> Auto-saved from Agentic OS dashboard · [[${PROJECT_DIR.replace('03-Projects/', '')}]]`,
+    `> Auto-saved from Agentic OS dashboard · [[Agentic OS]]`,
     '',
     '---',
     '',
@@ -208,9 +209,10 @@ export interface VaultSaveRequest {
   content: string
   append: boolean
   commitMessage: string
-  // SSH config
-  host: string
-  sshUser: string
+  // Vault location. If host is empty / 'localhost' / '127.0.0.1', the API
+  // writes directly to the local vault (no SSH). Otherwise SSH is used.
+  host?: string
+  sshUser?: string
   sshKeyPath?: string
   sshPassword?: string
 }
@@ -218,6 +220,8 @@ export interface VaultSaveRequest {
 export interface VaultSaveResult {
   success: boolean
   error?: string
+  /** 'local' if same-host fast path, 'remote' if SSH used. */
+  mode?: 'local' | 'remote'
 }
 
 export async function saveToVault(req: VaultSaveRequest): Promise<VaultSaveResult> {
@@ -229,7 +233,7 @@ export async function saveToVault(req: VaultSaveRequest): Promise<VaultSaveResul
     })
     const data = await res.json()
     if (!res.ok) return { success: false, error: data.error ?? 'Save failed' }
-    return { success: true }
+    return { success: true, mode: data.mode }
   } catch (e: any) {
     return { success: false, error: e.message ?? 'Network error' }
   }

@@ -90,7 +90,7 @@ export default function GoalsPanel() {
     })()
     if (!toSave) return
 
-    if (vaultEnabled && hetznerHost) {
+    if (vaultEnabled) {
       setSaving('saving')
       setVaultSaveStatus('saving')
       const date    = todayStr()

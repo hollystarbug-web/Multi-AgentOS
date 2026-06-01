@@ -137,7 +137,7 @@ export default function ChatPanel() {
       setIsStreaming(false)
 
       // ── Vault save ───────────────────────────────────────────────
-      if (vaultEnabled && hetznerHost) {
+      if (vaultEnabled) {
         // userMsg is already in scope — just grab the final assistant content from store
         const assistantMsg = useStore.getState().messages.find((m) => m.id === assistantId)
         if (assistantMsg?.content && !assistantMsg.content.startsWith('⚠️')) {
