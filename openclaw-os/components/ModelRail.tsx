@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plus, X, Check, Sparkles, Zap, Brain, Settings, ChevronDown } from 'lucide-react'
+import { Search, Plus, X, Check, Sparkles, Zap, Brain, Settings, ChevronDown, AlertTriangle, Loader2 } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { MODELS, getProviders, type ModelConfig, type Provider, PROVIDER_COLORS } from '@/lib/models'
 import { AGENTS, type AgentId } from '@/lib/agents'
@@ -25,6 +25,32 @@ export default function ModelRail({
   onToggleCollapse,
 }: ModelRailProps) {
   const [search, setSearch] = useState('')
+  // Live health status per model: { [modelId]: { status, latencyMs, keySource, error } }
+  const [health, setHealth] = useState<Record<string, { status: string; latencyMs?: number; keySource?: string; error?: string }>>({})
+  const [healthLoading, setHealthLoading] = useState(false)
+  
+  // Fetch model health on mount + every 60s
+  useEffect(() => {
+    let cancelled = false
+    async function fetchHealth() {
+      setHealthLoading(true)
+      try {
+        const r = await fetch('/api/models/health', { cache: 'no-store' })
+        const data = await r.json()
+        if (!cancelled && data.models) {
+          const map: typeof health = {}
+          for (const m of data.models) {
+            map[m.id] = { status: m.status, latencyMs: m.latencyMs, keySource: m.keySource, error: m.error }
+          }
+          setHealth(map)
+        }
+      } catch {}
+      if (!cancelled) setHealthLoading(false)
+    }
+    fetchHealth()
+    const interval = setInterval(fetchHealth, 60_000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [])
   const userModels = useStore((s) => s.userModels)
   const agent = AGENTS[agentId]
 
@@ -146,6 +172,32 @@ export default function ModelRail({
                   🧠 THINK
                 </div>
               )}
+              {/* Live health badge for current model */}
+              {health[currentModel.id] && health[currentModel.id].status === 'ok' && health[currentModel.id].latencyMs ? (
+                <div
+                  className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(52,211,153,0.15)', color: 'rgb(110,231,183)' }}
+                  title={`Healthy · ${health[currentModel.id].latencyMs}ms`}
+                >
+                  ● {health[currentModel.id].latencyMs}ms
+                </div>
+              ) : health[currentModel.id] && health[currentModel.id].status === 'quota' ? (
+                <div
+                  className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(251,191,36,0.15)', color: 'rgb(252,211,77)' }}
+                  title="Out of credits"
+                >
+                  ⚠ QUOTA
+                </div>
+              ) : health[currentModel.id] && (health[currentModel.id].status === 'no-key' || health[currentModel.id].status === 'auth') ? (
+                <div
+                  className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(251,113,133,0.15)', color: 'rgb(252,165,165)' }}
+                  title={health[currentModel.id].error || 'Credential issue'}
+                >
+                  ⚠ {health[currentModel.id].status === 'no-key' ? 'NO KEY' : 'AUTH'}
+                </div>
+              ) : null}
             </div>
             <div className="text-[10px] mt-2.5" style={{ color: 'var(--text-2)' }}>
               {currentModel.bestFor.slice(0, 2).join(' · ')}
@@ -210,6 +262,7 @@ export default function ModelRail({
               <div className="grid grid-cols-1 gap-1.5">
                 {models.map((m) => {
                   const isCurrent = m.id === currentModelId
+                  const h = health[m.id]
                   return (
                     <motion.button
                       key={m.id}
@@ -258,9 +311,61 @@ export default function ModelRail({
                             </div>
                           </div>
                         </div>
-                        {isCurrent && (
+                        {/* Health badge */}
+                        {h && (
+                          <div
+                            className="flex-shrink-0 mt-0.5"
+                            title={
+                              h.status === 'ok'
+                                ? `Healthy · ${h.latencyMs}ms`
+                                : h.status === 'quota'
+                                  ? 'Out of credits'
+                                  : h.status === 'auth'
+                                    ? 'API key invalid'
+                                    : h.status === 'no-key'
+                                      ? 'No API key configured'
+                                      : h.status === 'network'
+                                        ? 'Network error'
+                                        : 'Unknown status'
+                            }
+                          >
+                            {h.status === 'ok' ? (
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ background: 'rgb(52,211,153)' }}
+                              />
+                            ) : h.status === 'quota' ? (
+                              <div
+                                className="px-1 rounded text-[8px] font-bold"
+                                style={{ background: 'rgba(251,191,36,0.2)', color: 'rgb(251,191,36)' }}
+                              >
+                                QUOTA
+                              </div>
+                            ) : h.status === 'auth' || h.status === 'no-key' ? (
+                              <AlertTriangle size={11} style={{ color: 'rgb(251,113,133)' }} />
+                            ) : h.status === 'network' ? (
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ background: 'rgb(251,113,133)' }}
+                              />
+                            ) : (
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ background: 'rgba(255,255,255,0.3)' }}
+                              />
+                            )}
+                          </div>
+                        )}
+                        {isCurrent && !h && (
                           <Check
                             size={12}
+                            className="flex-shrink-0 mt-1"
+                            style={{ color: m.color }}
+                          />
+                        )}
+                        {isCurrent && h && h.status === 'ok' && (
+                          <Check
+                            size={11}
                             className="flex-shrink-0 mt-1"
                             style={{ color: m.color }}
                           />
