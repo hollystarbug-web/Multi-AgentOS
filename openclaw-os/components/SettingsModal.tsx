@@ -92,7 +92,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
           <div className="p-6 space-y-6">
             <SettingGroup
               icon={<Key size={15} />}
-              color="rgba(6,182,212,"
+              color="rgba(6,182,212,1)"
               title="Anthropic API Key"
               description="Used for Claude models"
             >
@@ -116,7 +116,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
             <SettingGroup
               icon={<span style={{fontSize:13}}>🔵</span>}
-              color="rgba(16,163,127,"
+              color="rgba(16,163,127,1)"
               title="DeepSeek API Key"
               description="V4 Flash — $0.14/M input, $0.28/M output. Best for general tasks."
             >
@@ -143,10 +143,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
             <SettingGroup
               icon={<span style={{fontSize:13}}>🟢</span>}
-              color="rgba(16,185,129,"
-            <SettingGroup
-              icon={<span style={{fontSize:13}}>🟢</span>}
-              color="rgba(118,185,0,"
+              color="rgba(118,185,0,1)"
               title="NVIDIA API Key (FREE)"
               description="DeepSeek V4 Flash via NVIDIA NIM — FREE. Get key at build.nvidia.com"
             >
@@ -173,7 +170,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
             <SettingGroup
               icon={<span style={{fontSize:13}}>🟢</span>}
-              color="rgba(16,185,129,"
+              color="rgba(16,185,129,1)"
               title="OpenAI API Key (optional)"
               description="For GPT-4.1, o4-mini, and OpenAI models"
             >
@@ -198,7 +195,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
             {/* Model Defaults */}
             <SettingGroup
               icon={<Bot size={15} />}
-              color="rgba(245,158,11,"
+              color="rgba(245,158,11,1)"
               title="Model Defaults"
               description="Default and fallback models for chat — can override per message"
             >
@@ -228,7 +225,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
             <SettingGroup
               icon={<Server size={15} />}
-              color="rgba(139,92,246,"
+              color="rgba(139,92,246,1)"
               title="Infrastructure Nodes"
               description="IP addresses of your Hetzner VPS and Mac Mini"
             >
@@ -262,7 +259,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
             <SettingGroup
               icon={<BookMarked size={15} />}
-              color="rgba(168,85,247,"
+              color="rgba(168,85,247,1)"
               title="OpenClaw-Wiki Vault"
               description="Auto-save chats, journal, and missions via SSH → git"
             >
@@ -353,7 +350,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
             <SettingGroup
               icon={<Globe size={15} />}
-              color="rgba(245,158,11,"
+              color="rgba(245,158,11,1)"
               title="Openclaw URL"
               description="Full URL to embed Openclaw in the dashboard panel"
             >

@@ -1,6 +1,8 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { ModelConfig } from './models'
+import type { AgentId } from './agents'
 
 export type NodeStatus = 'online' | 'offline' | 'busy' | 'idle'
 
@@ -70,6 +72,10 @@ interface AppState {
   deepseekApiKey: string              // DeepSeek
   openaiApiKey: string                // OpenAI
   openrouterApiKey: string           // OpenRouter
+  nvidiaApiKey: string                // NVIDIA NIM
+  geminiApiKey: string                // Google Gemini (direct)
+  hermesApiKey: string                // Hermes custom endpoint
+  openclawApiKey: string              // OpenClaw agent routing
   hetznerHost: string
   macMiniHost: string
   openclawUrl: string
@@ -78,6 +84,9 @@ interface AppState {
   setOpenaiApiKey: (key: string) => void
   setNvidiaApiKey: (key: string) => void
   setOpenrouterApiKey: (key: string) => void
+  setGeminiApiKey: (key: string) => void
+  setHermesApiKey: (key: string) => void
+  setOpenclawApiKey: (key: string) => void
   setHetznerHost: (host: string) => void
   setMacMiniHost: (host: string) => void
   setOpenclawUrl: (url: string) => void
@@ -109,11 +118,27 @@ interface AppState {
   setActivePanel: (panel: string) => void
 
   // Chat
+  /** Master chat (no persona). Used for the legacy 'chat' panel if visited. */
   messages: ChatMessage[]
   addMessage: (msg: ChatMessage) => void
   clearMessages: () => void
+  /** Per-agent chat history, keyed by AgentId. */
+  agentMessages: Partial<Record<AgentId, ChatMessage[]>>
+  addAgentMessage: (agentId: AgentId, msg: ChatMessage) => void
+  clearAgentMessages: (agentId: AgentId) => void
+  /** Per-agent currently-selected model, keyed by AgentId. */
+  agentModels: Partial<Record<AgentId, string>>
+  setAgentModel: (agentId: AgentId, modelId: string) => void
   isStreaming: boolean
   setIsStreaming: (v: boolean) => void
+
+  // User-added models (merged with stock MODELS at lookup)
+  userModels: Record<string, ModelConfig>
+  addUserModel: (m: ModelConfig) => void
+  removeUserModel: (id: string) => void
+  // Custom provider endpoints (for hermes, openclaw, etc.)
+  providerEndpoints: Record<string, string>
+  setProviderEndpoint: (provider: string, url: string) => void
 
   // Missions
   missions: Mission[]
@@ -192,6 +217,9 @@ export const useStore = create<AppState>()(
       nvidiaApiKey: '',
       openaiApiKey: '',
       openrouterApiKey: '',
+      geminiApiKey: '',
+      hermesApiKey: '',
+      openclawApiKey: '',
       hetznerHost: '',
       macMiniHost: '',
       openclawUrl: '',
@@ -200,6 +228,9 @@ export const useStore = create<AppState>()(
       setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
       setNvidiaApiKey: (nvidiaApiKey) => set({ nvidiaApiKey }),
       setOpenrouterApiKey: (openrouterApiKey) => set({ openrouterApiKey }),
+      setGeminiApiKey: (geminiApiKey) => set({ geminiApiKey }),
+      setHermesApiKey: (hermesApiKey) => set({ hermesApiKey }),
+      setOpenclawApiKey: (openclawApiKey) => set({ openclawApiKey }),
       setHetznerHost: (hetznerHost) => set({ hetznerHost }),
       setMacMiniHost: (macMiniHost) => set({ macMiniHost }),
       setOpenclawUrl: (openclawUrl) => set({ openclawUrl }),
@@ -230,14 +261,39 @@ export const useStore = create<AppState>()(
         vaultLastSaved: vaultSaveStatus === 'saved' ? new Date() : undefined,
       }),
 
-      activePanel: 'chat',
+      activePanel: 'agent-holly',
       setActivePanel: (activePanel) => set({ activePanel }),
 
       messages: [],
       addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
       clearMessages: () => set({ messages: [] }),
+      agentMessages: {},
+      addAgentMessage: (agentId, msg) =>
+        set((s) => ({
+          agentMessages: {
+            ...s.agentMessages,
+            [agentId]: [...(s.agentMessages[agentId] || []), msg],
+          },
+        })),
+      clearAgentMessages: (agentId) =>
+        set((s) => ({ agentMessages: { ...s.agentMessages, [agentId]: [] } })),
+      agentModels: {},
+      setAgentModel: (agentId, modelId) =>
+        set((s) => ({ agentModels: { ...s.agentModels, [agentId]: modelId } })),
       isStreaming: false,
       setIsStreaming: (isStreaming) => set({ isStreaming }),
+
+      userModels: {},
+      addUserModel: (m) => set((s) => ({ userModels: { ...s.userModels, [m.id]: m } })),
+      removeUserModel: (id) =>
+        set((s) => {
+          const next = { ...s.userModels }
+          delete next[id]
+          return { userModels: next }
+        }),
+      providerEndpoints: {},
+      setProviderEndpoint: (provider, url) =>
+        set((s) => ({ providerEndpoints: { ...s.providerEndpoints, [provider]: url } })),
 
       missions: [
         {
@@ -304,12 +360,30 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'openclaw-os-state',
+      version: 2,
+      migrate: (persistedState: any, version) => {
+        // v1 → v2: migrate master 'messages' into agentMessages['agent-claude'].
+        // Anything in the old master bucket becomes Claude's history.
+        if (version < 2 && persistedState) {
+          const oldMessages = persistedState.messages || []
+          if (oldMessages.length > 0 && !persistedState.agentMessages) {
+            persistedState.agentMessages = { 'agent-claude': oldMessages }
+          }
+          if (!persistedState.agentModels) persistedState.agentModels = {}
+          if (!persistedState.userModels) persistedState.userModels = {}
+          if (!persistedState.providerEndpoints) persistedState.providerEndpoints = {}
+        }
+        return persistedState
+      },
       partialize: (s) => ({
         apiKey: s.apiKey,
         deepseekApiKey: s.deepseekApiKey,
         nvidiaApiKey: s.nvidiaApiKey,
         openaiApiKey: s.openaiApiKey,
         openrouterApiKey: s.openrouterApiKey,
+        geminiApiKey: (s as any).geminiApiKey,
+        hermesApiKey: (s as any).hermesApiKey,
+        openclawApiKey: (s as any).openclawApiKey,
         hetznerHost: s.hetznerHost,
         macMiniHost: s.macMiniHost,
         openclawUrl: s.openclawUrl,
@@ -321,6 +395,10 @@ export const useStore = create<AppState>()(
         vaultSshKeyPath: s.vaultSshKeyPath,
         vaultSshPassword: s.vaultSshPassword,
         messages: s.messages,
+        agentMessages: s.agentMessages,
+        agentModels: s.agentModels,
+        userModels: s.userModels,
+        providerEndpoints: s.providerEndpoints,
         missions: s.missions,
         journalEntries: s.journalEntries,
         goals: s.goals,
