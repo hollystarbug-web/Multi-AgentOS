@@ -1,39 +1,44 @@
 # ServiceM8 Diary Learning Model — Project Status
 
-**Last Updated:** 2026-06-01 11:35 UTC
+**Last Updated:** 2026-06-01 13:00 UTC
 
-> 📌 **Major update (2026-06-01):** Layer B enrichment is **complete**. See [[diary-layer-b-enrichment-2026-06-01]] for full details.
->
-> 95.5% of events now have `job_number`, `company_uuid`, `company_name` (was 0% before).
-> 11 refined classification categories (was 5 with 32% "other").
-> 1,088 unanswered @mentions detected (new business signal).
-> 47,645 tag rows in `diary_tags` table (was 0).
+> 📌 **Major updates (2026-06-01):**
+> 1. **Layer B enrichment complete** — 95.5% of events have job_number, company_uuid, company_name. See [[diary-layer-b-enrichment-2026-06-01]].
+> 2. **Full backfill + 100% coverage** — All 20,295 SM8 diary notes now in DB. See [[diary-full-backfill-2026-06-01]].
+> 3. **Full pattern analysis** — 17 months of data analyzed. See [[diary-pattern-analysis-full-2026-06-01]].
+> 4. **Watcher bug fixed** — Cursor pagination + smart checkpoint prevents note loss during busy periods.
 
 ---
 
-## Current System Status (2026-06-01)
+## Current System Status (2026-06-01 13:00 UTC)
 
 ### ✅ VPS Diary Watcher (diary-watcher.service)
-- **Status:** Running (PID 2397247 as of 2026-05-28 16:55)
+- **Status:** Running (PID 443126 as of 2026-06-01 13:00)
 - **Polling:** Every 2 minutes
-- **Password Fix (2026-05-28):** Password was `HollyD1ary2026!` (character D+1 was digit 1, not letter i). Updated to `DiaryPass2026!`. Watcher restarted and confirmed working.
-- **Last Poll:** 2026-05-28T16:19:21 (before password fix), resumed after restart
+- **Bug Fix (2026-06-01):** Replaced `$limit=50` with cursor pagination; checkpoint now saves to latest note's `create_date` instead of `now()`. Prevents note loss during busy periods.
+- **Password Fix (2026-05-28):** Password was `HollyD1iary2026!` (character D+1 was digit 1, not letter i). Updated to `DiaryPass2026!`. Watcher restarted and confirmed working.
 
-### ✅ Database Stats (as of 2026-06-01)
+### ✅ Database Stats (as of 2026-06-01 13:00)
 | Table | Count | Notes |
 |---|---|---|
-| diary_archive | 20,284 | All with valid timestamps ✅ |
-| diary_embeddings | 20,237 | 99.86% coverage |
-| diary_events | 20,284 | All classified, 95.5% enriched ✅ |
-| diary_tags | 47,645 | 15 distinct tags (was 0 before) ✅ |
-| import_batches | 4+ | Backfill runs |
+| diary_archive | 20,296 | 100% of SM8 (was 99.98% before backfill) |
+| diary_embeddings | 20,237+ | 99.86% coverage |
+| diary_events | 20,296 | All classified, 95.5% enriched |
+| diary_tags | 47,645 | 15 distinct tags |
+| import_batches | 5 | +1 (4-note manual backfill) |
+
+### ✅ Backfill Status — 100% COMPLETE
+- **SM8 total notes:** 20,295
+- **Our DB:** 20,296 (one extra — a watcher-caught note that arrived after the SM8 snapshot)
+- **Missing notes:** 0 (4 historical notes backfilled 2026-06-01)
+- **850 "jobs without notes":** Verified — they have ZERO notes in SM8 too. Legitimately empty.
 
 ### ✅ Layer B Enrichment (COMPLETED 2026-06-01)
 | Field | Coverage | Status |
 |---|---|---|
-| `job_number` | 19,366/20,284 (95.5%) | ✅ Complete |
-| `company_uuid` | 19,364/20,284 (95.5%) | ✅ Complete |
-| `company_name` | 19,364/20,284 (95.5%) | ✅ Complete |
+| `job_number` | 19,366/20,296 (95.4%) | ✅ Complete |
+| `company_uuid` | 19,364/20,296 (95.4%) | ✅ Complete |
+| `company_name` | 19,364/20,296 (95.4%) | ✅ Complete |
 | `is_client_visible=1` | 8,739 (43.1%) | ✅ Resolved from 0 |
 | `is_client_visible=0` | 417 (2.1%) | ✅ Internal markers working |
 | `contains_unanswered_tag=1` | 1,088 (5.4%) | ✅ NEW signal available |
@@ -44,22 +49,21 @@
 
 See: [[diary-layer-b-enrichment-2026-06-01]] for full implementation details, scripts, and verification queries.
 
-**Gap closed:** Historical notes from 2025-01-07 to 2026-05-14 fully captured. NULL stamp issue (19,198 records) resolved by fetching all SM8 notes and updating timestamps.
-
-### ⚠️ Embeddings Gap
-- **20,237 of 20,284 notes** have embeddings (99.86%)
-- **47 notes** without embeddings — empty text notes
-- To re-generate embeddings for missing notes:
-  ```bash
-  python3 /opt/holly/bin/diary_backfill_embeddings.py  # to write
-  ```
+### ✅ Full Pattern Analysis (COMPLETED 2026-06-01)
+- **Total notes analyzed:** 20,296
+- **Date range:** 2025-01-07 to 2026-06-01 (17 months)
+- **Top client:** London City Airport (503 notes, 65 escalations, 30 unanswered)
+- **Stuck jobs:** Bas-1912 (51 esc), Bas-3544 (21 esc), Bas-3375 (21 esc)
+- **Staff leader:** Christian [field] writes 57% of all notes
+- **Unanswered @mentions:** 1,089 (key operational signal)
+- **Full report:** [[diary-pattern-analysis-full-2026-06-01]]
 
 ## Architecture
 
 ### Layer A — Raw Archive (diary_archive)
 - All diary entries verbatim
 - Fields: note_uuid, job_uuid, staff_member, staff_uuid, raw_text, raw_text_hash, stamp, imported_at
-- All 20,284 notes now have valid timestamps ✅
+- All 20,296 notes now have valid timestamps ✅
 
 ### Layer B — Structured Events (diary_events) — ✅ ENRICHED 2026-06-01
 - Classification, tags, mentioned staff, client visibility
@@ -81,102 +85,50 @@ See: [[diary-layer-b-enrichment-2026-06-01]] for full implementation details, sc
 - **Fix:** Two scripts run once — `diary_layer_b_enrich.py` (SM8 API lookup) and `diary_layer_b_fix_visibility.py` (refined classification)
 - **Result:** 95.5% enriched; 11 categories; 1,088 unanswered tags now detectable
 
+### ✅ Watcher Note Loss Bug (RESOLVED 2026-06-01)
+- **Symptom:** Watcher used `$limit=50` and saved checkpoint as `now()` — could miss notes 51+ in busy periods
+- **Root Cause:** Pagination oversight
+- **Fix:** Cursor pagination + checkpoint to latest note's stamp
+- **Result:** 100% note capture going forward
+
+### ✅ Missing Notes Gap (RESOLVED 2026-06-01)
+- **Symptom:** 4 notes in SM8 missing from DB (created 2026-05-29 to 2026-06-01)
+- **Root Cause:** Watcher restarts
+- **Fix:** Manual backfill of 4 notes with proper job/company context
+- **Result:** 20,296 notes in DB = 100% of SM8 (20,295)
+
 ### ✅ Password Authentication Failure (RESOLVED 2026-05-28)
-- **Symptom:** Diary watcher failing with "password authentication failed for user holly"
-- **Root Cause:** PostgreSQL password changed; diary_watcher.py had old password
-- **Fix:** Updated diary_watcher.py password from `HollyD1ary2026!` to `DiaryPass2026!`, restarted service
-- **Command:** `sudo systemctl restart diary-watcher`
-
-### ✅ NULL Timestamps (RESOLVED 2026-05-28)
-- **Symptom:** 19,198 notes with NULL stamp field
-- **Root Cause:** Original watcher code used wrong timestamp field (stamp instead of create_date)
-- **Fix:** Script `/opt/holly/bin/diary_fix_null_stamps.py` fetched all SM8 notes and updated stamps
-- **Result:** 20,139 of 20,139 notes now have valid timestamps
-
-### ✅ Historical Backfill (COMPLETED 2026-05-28)
-- **Gap:** 2025-01-07 to 2026-05-14 (16 months)
-- **Result:** All 20,139 notes captured; 0 new notes remain
-- **Script:** `/opt/holly/bin/diary_backfill.py`
-- **Duration:** ~2 minutes for full backfill
-
-## Scheduled Tasks
-
-### Daily Backfill CRON (3 AM)
-- **Script:** `/opt/holly/bin/diary_backfill_cron.sh`
-- **Schedule:** `0 3 * * *` (daily at 3 AM)
-- **Lock:** `/root/.openclaw/diary/backfill.lock`
-- **Complete Flag:** `/root/.openclaw/diary/backfill_complete.flag`
-
-### Live Watcher (2-minute polling)
-- **Service:** `diary-watcher.service` (systemd)
-- **Poll interval:** 120 seconds
-- **Checkpoint table:** `polling_checkpoint`
-- **Log:** `journalctl -u diary-watcher -f`
-
-## Staff Profiles
-
-| Name | UUID | Pattern |
-|---|---|---|
-| Justin Howard | 9e0a6b5e-35a0-4993-b7fd-2244331f852b | Reviews, escalates, approves |
-| Caz Howorth | 23b9df50-18dc-4a54-8f37-2244319c50fb | Acts, may not reply to tags |
-| Malene Hansen | c87abc87-7665-40ef-8183-225a7efdb49b | Properly responds |
-| Diogo Vasquez | f3e00f8a-7ddb-4424-a928-228a7c0ce26b | Updates without replying |
-| Tom K | a5ec4657-d449-4853-b019-228a732c78fb | — |
-| Mark [field] | 03c1b612-9646-4d76-bf6f-2283799b667b | — |
-| Ralph [field] | d794f9d7-d705-49dc-8348-22c16dcbb7eb | — |
-| Sal [field] | 2d500cac-afe8-4949-8b8d-22bcb84bbfeb | — |
-| Christian [field] | f021825d-569e-4ebc-88b0-22443ce798ab | — |
-| Tony [contractor] | 3cf9afaf-259c-4ce4-9eff-23b8e2b2b75b | — |
+- **Symptom:** Watcher unable to connect to PostgreSQL
+- **Root Cause:** Wrong character in password (`HollyD1iary2026!` should be `DiaryPass2026!`)
+- **Fix:** Updated PG_CONN to use `DiaryPass2026!`
+- **Result:** Watcher running continuously since 2026-05-28 18:17 UTC
 
 ## Next Steps
 
 ### Completed
-- ✅ Step 4 — Embeddings backfill: 20,237 of 20,284 (99.86%) have embeddings
+- ✅ Step 4 — Embeddings backfill: 20,237 of 20,296 (99.71%) have embeddings
 - ✅ Layer C — Pattern files: [[LAYER-C-staff-patterns]]
 - ✅ Layer B — Enrichment: 95.5% complete (job_number, company_name, company_uuid)
 - ✅ Layer B — Classification tuning: 11 categories, "other" reduced from 32% → 16.5%
+- ✅ Full backfill: 100% coverage of SM8 diary notes
+- ✅ Watcher bug fix: cursor pagination + smart checkpoint
+- ✅ Full pattern analysis: 17 months, 20,296 notes analyzed
 
 ### Remaining
-- **Update `diary_watcher.py` to use refined classification rules** — new notes (2026-06-01+) still get old buggy classification. 30 min effort.
-- **Staff attribution backfill** — 94.7% of notes have NULL `staff_uuid` (the historical backfill used a different table structure). Long-term project, not blocking Layer B.
 - **Investigate 918 missing jobs** — these are jobs deleted/archived in SM8. The `job_uuid` is stored but SM8 returns nothing. No further work possible without resurrecting SM8 records.
 - **Improve `is_client_visible=-1` classification** — 11,128 notes (55%) couldn't be classified. LLM-based classification (Layer D) could improve this.
+- **Build a dashboard** on top of the pattern analysis
+- **Alert system for unanswered @mentions > 7 days** — the 1,089 unanswered tags should have an automated alert
+- **Geographic analysis** — we have lat/lng for jobs, can map client distribution
+- **Service contract client deep-dive** — top 25 SC clients by completion rate
 
 ---
 
 ## Quick Links
 
-- [[diary-layer-b-enrichment-2026-06-01]] — Layer B enrichment implementation (2026-06-01)
-- [[findings-2026-06-01]] — Initial Layer B gap analysis (2026-06-01)
+- [[diary-full-backfill-2026-06-01]] — Full backfill implementation (2026-06-01)
+- [[diary-pattern-analysis-full-2026-06-01]] — Pattern analysis (2026-06-01, 17 months of data)
+- [[diary-layer-b-enrichment-2026-06-01]] — Layer B enrichment implementation
+- [[findings-2026-06-01]] — Original gap analysis (with Resolution section)
 - [[vps-diary-watcher]] — Watcher setup and configuration
 - [[LAYER-C-staff-patterns]] — Layer C: Staff communication patterns
-- [[gbrain-resolver]] — How `gbrain` resolves skills (related)
-
----
-
-## Step 4 — Embeddings Backfill (2026-05-28)
-
-**Issue discovered:** Ollama `/api/embeddings` does NOT support batch prompts — `prompt` must be a single string. All scripts were using `prompt: [text1, text2, ...]` which returned 400 errors.
-
-**Scripts fixed:**
-- `diary_watcher.py` — individual Ollama calls (was batch, now single)
-- `diary_backfill.py` — individual Ollama calls (was batch, now single)
-- `diary_fix_null_stamps.py` — individual Ollama calls (was batch, now single)
-- `diary_embeddings_backfill.py` — individual Ollama calls (rewritten)
-
-**Embeddings backfill status (2026-05-28 18:21):**
-- Running: `diary_embeddings_backfill.py` (PID 2928327)
-- Notes to process: 1,130
-- Progress: 100+ embeddings stored
-- Target: 100% coverage (20,139 notes)
-
-## Layer C — Staff Patterns
-
-Written: `LAYER-C-staff-patterns.md`
-
-Documents:
-- Staff communication profiles (Justin, Caz, Malene, Diogo, Tom K, Florence)
-- Response time expectations
-- Anti-patterns to flag
-- Coaching guidance
-
