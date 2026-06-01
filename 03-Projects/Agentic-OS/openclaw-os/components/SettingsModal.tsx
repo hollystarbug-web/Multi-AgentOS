@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Key, Server, Globe, Eye, EyeOff, Save, CheckCircle, BookMarked, ChevronDown, Bot } from 'lucide-react'
 import { useStore } from '@/lib/store'
@@ -381,6 +381,9 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                 Tip: Use a Cloudflare Tunnel or nginx for HTTPS access.
               </p>
             </SettingGroup>
+
+            {/* Provider Status — live from server */}
+            <ProviderStatusSection />
           </div>
 
           {/* Footer */}
@@ -525,5 +528,152 @@ function ModelSelect({ value, onChange }: { value: string; onChange: (v: string)
       {/* Backdrop */}
       {open && <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />}
     </div>
+  )
+}
+
+/**
+ * ProviderStatusSection
+ * ---------------------
+ * Shows the live status of every provider — where the API key lives
+ * (env var, .credentials/ JSON file, or missing) and a live ping result
+ * for each working provider.
+ *
+ * The keys themselves stay on the server. This component never sees them.
+ */
+function ProviderStatusSection() {
+  const [status, setStatus] = useState<Array<{
+    provider: string
+    keySource: 'env' | 'file' | 'missing' | 'request'
+    hasKey: boolean
+    keyPreview?: string
+  }> | null>(null)
+  const [modelHealth, setModelHealth] = useState<Record<string, { status: string; latencyMs?: number; error?: string }>>({})
+  const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function refresh(force = false) {
+    if (force) setRefreshing(true)
+    else setLoading(true)
+    try {
+      const [provR, modR] = await Promise.all([
+        fetch('/api/providers').then((r) => r.json()),
+        fetch(force ? '/api/models/health?force=true' : '/api/models/health').then((r) => r.json()),
+      ])
+      if (provR.providers) setStatus(provR.providers)
+      if (modR.models) {
+        const map: typeof modelHealth = {}
+        for (const m of modR.models) {
+          map[m.id] = { status: m.status, latencyMs: m.latencyMs, error: m.error }
+        }
+        setModelHealth(map)
+      }
+    } catch (e) {
+      // ignore
+    }
+    setLoading(false)
+    setRefreshing(false)
+  }
+
+  useEffect(() => { refresh(false) }, [])
+
+  const workingCount = status?.filter((p) => p.hasKey).length ?? 0
+  const totalCount = status?.length ?? 0
+
+  // Count by status
+  const okCount = Object.values(modelHealth).filter((m) => m.status === 'ok').length
+  const failCount = Object.values(modelHealth).filter((m) => m.status === 'no-key' || m.status === 'auth' || m.status === 'quota').length
+
+  return (
+    <SettingGroup
+      icon={<span style={{ fontSize: 13 }}>⚡</span>}
+      color="rgba(52,211,153,1)"
+      title="Provider Status"
+      description={`${workingCount}/${totalCount} providers configured · ${okCount} models working`}
+    >
+      <div className="space-y-2">
+        {/* Summary line */}
+        <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          <div className="flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgb(52,211,153)' }} />
+            <span>{okCount} OK</span>
+          </div>
+          {failCount > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgb(251,113,133)' }} />
+              <span>{failCount} not working</span>
+            </div>
+          )}
+          <div className="flex-1" />
+          <button
+            onClick={() => refresh(true)}
+            disabled={refreshing}
+            className="text-[10px] px-2 py-1 rounded-md btn-glass"
+            style={{ color: 'var(--text-2)' }}
+            title="Ping all providers (slower — runs a real request to each)"
+          >
+            {refreshing ? 'Pinging…' : 'Refresh'}
+          </button>
+        </div>
+
+        {/* Provider list */}
+        <div className="space-y-1 max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+          {status === null && <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Loading…</div>}
+          {status?.map((p) => {
+            // Find any model from this provider
+            const modelForProvider = Object.values(MODELS).find((m) => m.provider === p.provider)
+            const h = modelForProvider ? modelHealth[modelForProvider.id] : undefined
+            const color = p.hasKey ? 'rgb(52,211,153)' : 'rgba(255,255,255,0.3)'
+            return (
+              <div
+                key={p.provider}
+                className="flex items-center gap-2 text-[11px] py-1.5 px-2 rounded-md"
+                style={{ background: 'rgba(255,255,255,0.02)' }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                <span className="font-mono font-semibold capitalize" style={{ color: 'var(--text-1)' }}>
+                  {p.provider}
+                </span>
+                <span style={{ color: 'var(--text-4)' }}>·</span>
+                {p.hasKey ? (
+                  <>
+                    <span className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                      {p.keySource === 'env' ? 'env' : p.keySource === 'file' ? '.credentials/' : p.keySource}
+                    </span>
+                    {h && h.status === 'ok' && h.latencyMs && (
+                      <span
+                        className="text-[10px] ml-auto font-mono"
+                        style={{ color: 'rgb(110,231,183)' }}
+                      >
+                        ● {h.latencyMs}ms
+                      </span>
+                    )}
+                    {h && h.status === 'quota' && (
+                      <span className="text-[10px] ml-auto" style={{ color: 'rgb(252,211,77)' }}>QUOTA</span>
+                    )}
+                    {h && h.status === 'auth' && (
+                      <span className="text-[10px] ml-auto" style={{ color: 'rgb(252,165,165)' }}>AUTH</span>
+                    )}
+                    {!h && (
+                      <span className="text-[10px] ml-auto" style={{ color: 'var(--text-4)' }}>
+                        (untested)
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-[10px] ml-auto" style={{ color: 'var(--text-4)' }}>
+                    no key
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <p className="text-[10px] mt-1" style={{ color: 'var(--text-4)' }}>
+          Keys are read server-side from <code>ANTHROPIC_API_KEY</code> env or
+          <code> ~/.openclaw/workspace/.credentials/&lt;provider&gt;.json</code>. Never sent to client.
+        </p>
+      </div>
+    </SettingGroup>
   )
 }

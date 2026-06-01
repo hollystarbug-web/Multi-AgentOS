@@ -34,6 +34,26 @@ export default function AgentChatPanel({ agentId }: AgentChatPanelProps) {
   const isStreaming = useStore((s) => s.isStreaming)
   const setIsStreaming = useStore((s) => s.setIsStreaming)
 
+  // Server-side model health (used to know if server has API key for this model)
+  const [serverHealth, setServerHealth] = useState<Record<string, { status: string }>>({})
+  useEffect(() => {
+    let cancelled = false
+    async function fetchHealth() {
+      try {
+        const r = await fetch('/api/models/health', { cache: 'no-store' })
+        const data = await r.json()
+        if (!cancelled && data.models) {
+          const map: Record<string, { status: string }> = {}
+          for (const m of data.models) map[m.id] = { status: m.status }
+          setServerHealth(map)
+        }
+      } catch {}
+    }
+    fetchHealth()
+    const interval = setInterval(fetchHealth, 60_000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [])
+
   // API keys
   const apiKey           = useStore((s) => s.apiKey)
   const deepseekApiKey   = useStore((s) => s.deepseekApiKey)
@@ -61,19 +81,25 @@ export default function AgentChatPanel({ agentId }: AgentChatPanelProps) {
   const model = MODELS[effectiveModelId] || MODELS['MiniMax-M3']
 
   // Has any key for this provider
+  // First check client-side key (overrides), then fall back to server-side status from /api/models/health
   const hasProviderKey = (() => {
+    // Client override keys (set in Settings)
     switch (model.provider) {
-      case 'anthropic': return !!apiKey
-      case 'openai': return !!openaiApiKey
-      case 'deepseek': return !!deepseekApiKey
-      case 'openrouter': return !!(openrouterApiKey || openaiApiKey)
-      case 'nvidia': return !!nvidiaApiKey
-      case 'gemini': return !!geminiApiKey
-      case 'hermes': return true // local endpoint
-      case 'openclaw': return true // local endpoint
-      case 'minimax': return true // server-side env
-      default: return !!apiKey
+      case 'anthropic': if (apiKey) return true; break
+      case 'openai': if (openaiApiKey) return true; break
+      case 'deepseek': if (deepseekApiKey) return true; break
+      case 'openrouter': if (openrouterApiKey || openaiApiKey) return true; break
+      case 'nvidia': if (nvidiaApiKey) return true; break
+      case 'gemini': if (geminiApiKey) return true; break
     }
+    // Local endpoints don't need keys
+    if (model.provider === 'hermes' || model.provider === 'openclaw') return true
+    // Fall back to server-side health check — if status is 'ok' or 'quota', server has the key
+    if (serverHealth && serverHealth[model.id]) {
+      const s = serverHealth[model.id].status
+      if (s === 'ok' || s === 'quota') return true
+    }
+    return false
   })()
 
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -127,14 +153,16 @@ export default function AgentChatPanel({ agentId }: AgentChatPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...agentMessages, userMsg].map((m) => ({ role: m.role, content: m.content })),
-          apiKey,
-          deepseekApiKey,
-          openaiApiKey,
-          nvidiaApiKey,
-          openrouterApiKey,
-          geminiApiKey,
-          hermesApiKey,
-          openclawApiKey,
+          // Per-request key override (used to test new keys in Settings).
+          // If unset, the server falls back to its own credential store.
+          apiKey: apiKey || undefined,
+          deepseekApiKey: deepseekApiKey || undefined,
+          openaiApiKey: openaiApiKey || undefined,
+          nvidiaApiKey: nvidiaApiKey || undefined,
+          openrouterApiKey: openrouterApiKey || undefined,
+          geminiApiKey: geminiApiKey || undefined,
+          hermesApiKey: hermesApiKey || undefined,
+          openclawApiKey: openclawApiKey || undefined,
           model: effectiveModelId,
           agentId,
         }),
@@ -389,6 +417,7 @@ export default function AgentChatPanel({ agentId }: AgentChatPanelProps) {
         isStreaming={isStreaming}
         hasKey={hasProviderKey}
         agent={agent}
+        model={model}
       />
     </div>
   )
@@ -721,9 +750,10 @@ interface InputBarProps {
   isStreaming: boolean
   hasKey: boolean
   agent: typeof AGENTS[AgentId]
+  model: typeof MODELS[string]
 }
 
-function InputBar({ input, setInput, onSend, onKeyDown, textareaRef, isStreaming, hasKey, agent }: InputBarProps) {
+function InputBar({ input, setInput, onSend, onKeyDown, textareaRef, isStreaming, hasKey, agent, model }: InputBarProps) {
   const canSend = !!input.trim() && !isStreaming && hasKey
   const accent = agent.accent
 
@@ -742,7 +772,7 @@ function InputBar({ input, setInput, onSend, onKeyDown, textareaRef, isStreaming
     ? voice.interimText
     : hasKey
     ? `Message ${agent.name}…`
-    : 'Set your API key in Settings first…'
+    : `No API key for ${model.provider} — add one to .credentials/ or Settings`
 
   return (
     <div

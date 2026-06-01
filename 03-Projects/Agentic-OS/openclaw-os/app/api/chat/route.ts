@@ -1,14 +1,16 @@
 import { NextRequest } from 'next/server'
 import { AGENTS, getAgent, type AgentId } from '@/lib/agents'
+import { getApiKey, getProviderBaseUrl } from '@/lib/credentials'
 
 export const runtime = 'nodejs'
 
 // ─── Provider detection ────────────────────────────────────────────────────────
 
-type Provider = 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' | 'nvidia' | 'gemini' | 'hermes' | 'openclaw'
+type Provider = 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' | 'nvidia' | 'gemini' | 'hermes' | 'openclaw' | 'kimi' | 'moonshot'
 
 function getProvider(model: string): Provider {
   if (model.startsWith('claude-')) return 'anthropic'
+  if (model.startsWith('kimi') || model.startsWith('moonshot')) return 'kimi'
   if (model.startsWith('deepseek-')) return 'deepseek'
   if (model.startsWith('gpt-') || model.startsWith('o4-') || model.startsWith('o3-') || model.startsWith('chatgpt-')) return 'openai'
   if (model.startsWith('MiniMax-')) return 'minimax'
@@ -20,45 +22,26 @@ function getProvider(model: string): Provider {
   return 'openai'
 }
 
-function getBaseUrl(provider: Provider): string {
-  switch (provider) {
-    case 'anthropic':  return 'https://api.anthropic.com/v1'
-    case 'deepseek':   return 'https://api.deepseek.com/v1'
-    case 'openai':     return 'https://api.openai.com/v1'
-    case 'minimax':    return 'https://api.minimax.chat/v1'
-    case 'openrouter': return 'https://openrouter.ai/api/v1'
-    case 'nvidia':     return 'https://integrate.api.nvidia.com/v1'
-    case 'gemini':     return 'https://generativelanguage.googleapis.com/v1beta/openai'
-    case 'hermes':     return process.env.HERMES_BASE_URL || 'http://localhost:11434/v1'
-    case 'openclaw':   return process.env.OPENCLAW_BASE_URL || 'http://localhost:18789/v1'
-    default:           return 'https://api.openai.com/v1'
-  }
-}
-
-function getHeaders(provider: Provider, key: string, model: string): Record<string, string> {
+function getHeaders(provider: Provider, key: string): Record<string, string> {
   switch (provider) {
     case 'anthropic':
       return {
         'x-api-key': key,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true',
       }
     case 'deepseek':
     case 'openai':
+    case 'kimi':
+    case 'moonshot':
     case 'openrouter':
     case 'nvidia':
     case 'gemini':
     case 'hermes':
     case 'openclaw':
-      return {
-        'Authorization': `Bearer ${key}`,
-        'content-type': 'application/json',
-      }
     case 'minimax':
       return {
         'Authorization': `Bearer ${key}`,
-        'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
       }
     default:
@@ -74,7 +57,7 @@ function buildRequestBody(
   reasoning?: { effort: 'low' | 'medium' | 'high' },
 ): Record<string, unknown> {
   const msgs = [...messages]
-  if (systemPrompt) {
+  if (systemPrompt && provider !== 'anthropic') {
     msgs.unshift({ role: 'system', content: systemPrompt })
   }
 
@@ -82,6 +65,15 @@ function buildRequestBody(
     case 'anthropic': {
       const system = msgs.filter(m => m.role === 'system').map(m => m.content).join('\n')
       const conversation = msgs.filter(m => m.role !== 'system')
+      if (systemPrompt && !system) {
+        return {
+          model,
+          max_tokens: 8192,
+          system: systemPrompt,
+          messages: conversation.map(m => ({ role: m.role, content: m.content })),
+          stream: true,
+        }
+      }
       return {
         model,
         max_tokens: 8192,
@@ -92,6 +84,8 @@ function buildRequestBody(
     }
     case 'deepseek':
     case 'openai':
+    case 'kimi':
+    case 'moonshot':
     case 'minimax':
     case 'openrouter':
     case 'nvidia':
@@ -102,15 +96,14 @@ function buildRequestBody(
       if (provider === 'nvidia') {
         actualModel = model.replace('nvidia/', 'deepseek-ai/')
       }
+      // Kimi requires temperature=1 or omitted
       const body: Record<string, unknown> = {
         model: actualModel,
         messages: msgs.map(m => ({ role: m.role, content: m.content })),
         stream: true,
+        max_tokens: 8192,
       }
-      if (provider === 'minimax' || provider === 'openai') {
-        body.max_tokens = 8192
-      }
-      // OpenAI-style reasoning_effort for thinking models (gpt-5.5-thinking, o4-mini, etc.)
+      // OpenAI-style reasoning_effort for thinking models
       if (reasoning && (provider === 'openai' || provider === 'openrouter')) {
         body.reasoning_effort = reasoning.effort
       }
@@ -131,6 +124,8 @@ function extractDelta(provider: Provider, event: Record<string, unknown>): strin
         break
       case 'deepseek':
       case 'openai':
+      case 'kimi':
+      case 'moonshot':
       case 'minimax':
       case 'openrouter':
       case 'nvidia':
@@ -142,7 +137,6 @@ function extractDelta(provider: Provider, event: Record<string, unknown>): strin
           const delta = choices[0].delta as Record<string, unknown> | undefined
           if (delta && typeof delta.content === 'string') return delta.content
           if (delta && typeof delta.text === 'string') return delta.text
-          // reasoning_content (DeepSeek R1, etc.) — surface it transparently
           if (delta && typeof (delta as any).reasoning_content === 'string') {
             return (delta as any).reasoning_content
           }
@@ -159,6 +153,8 @@ function isDoneEvent(provider: Provider, event: Record<string, unknown>): boolea
     case 'anthropic': return event.type === 'message_stop' || event.type === 'message_delta'
     case 'deepseek':
     case 'openai':
+    case 'kimi':
+    case 'moonshot':
     case 'minimax':
     case 'openrouter':
     case 'nvidia':
@@ -184,26 +180,17 @@ export async function POST(req: NextRequest) {
 
   const {
     messages,
-    apiKey, deepseekApiKey, openaiApiKey, nvidiaApiKey,
-    openrouterApiKey, geminiApiKey, hermesApiKey, openclawApiKey,
+    apiKey,
     model: requestedModel,
     agentId,
   } = body as {
     messages: Array<{ role: string; content: string }>
     apiKey?: string
-    deepseekApiKey?: string
-    openaiApiKey?: string
-    nvidiaApiKey?: string
-    openrouterApiKey?: string
-    geminiApiKey?: string
-    hermesApiKey?: string
-    openclawApiKey?: string
     model?: string
     agentId?: string
   }
 
   // Resolve the system prompt from the agent registry.
-  // Free agents (e.g. agent-direct) have an empty prompt and get the default.
   const DEFAULT_SYSTEM_PROMPT = `You are an AI assistant running inside Agentic OS — a custom AI mission control dashboard. You're being accessed from the operator's MacBook via a Next.js app that manages their AI agent fleet: a Hetzner VPS running OpenClaw (with agents Holly, Kryten, Sally, Grim, Oscar, Reggie), and a Mac Mini browsing node.
 
 Be concise, direct, and technically precise. The operator is technical and building out an AI agent infrastructure.`
@@ -215,50 +202,41 @@ Be concise, direct, and technically precise. The operator is technical and build
     else if (agent.freeAgent) systemPrompt = '' // truly free
   }
 
-  // Default to MiniMax-M3 if no model specified (free, fast, agent-friendly)
-  const model = (requestedModel as string) || 'MiniMax-M3'
+  // Default to Claude Haiku 4.5 if no model specified (fast + free-tier ish)
+  const model = (requestedModel as string) || 'claude-haiku-4-5'
   const provider = getProvider(model)
 
-  // Get the right API key for this provider
-  let key = ''
-  switch (provider) {
-    case 'anthropic':  key = (apiKey as string) || ''; break
-    case 'deepseek':   key = (deepseekApiKey as string) || ''; break
-    case 'openai':     key = (openaiApiKey as string) || ''; break
-    case 'minimax':    key = (apiKey as string) || process.env.MINIMAX_API_KEY || ''; break
-    case 'openrouter': key = (openrouterApiKey as string) || (openaiApiKey as string) || process.env.OPENROUTER_API_KEY || ''; break
-    case 'nvidia':     key = (nvidiaApiKey as string) || ''; break
-    case 'gemini':     key = (geminiApiKey as string) || process.env.GEMINI_API_KEY || ''; break
-    case 'hermes':     key = (hermesApiKey as string) || ''; break
-    case 'openclaw':   key = (openclawApiKey as string) || ''; break
-    default:           key = (apiKey as string) || ''
-  }
+  // Get API key from credentials (server-side: env > file > request override)
+  const keyInfo = getApiKey(provider, apiKey)
+  const key = keyInfo.key
 
   // For thinking models, pull reasoning effort from the model config
   let reasoning: { effort: 'low' | 'medium' | 'high' } | undefined
-  if (model === 'gpt-5.5-thinking' || model === 'gpt-5.5-thinking' || model === 'o4-mini') {
+  if (model === 'gpt-5.5-thinking' || model === 'o4-mini') {
     reasoning = { effort: 'high' }
   }
 
-  if (!key && provider !== 'hermes' && provider !== 'openclaw') {
+  if (!key) {
     return Response.json({
-      error: `No API key for ${provider}. Add your ${provider} API key in Settings → API Keys.`,
+      error: `No API key for ${provider}. Add a credential at /root/.openclaw/workspace/.credentials/ or set ${provider.toUpperCase()}_API_KEY in env.`,
+      provider,
+      keySource: keyInfo.source,
     }, { status: 401 })
   }
 
-  const baseUrl = getBaseUrl(provider)
-  const headers = getHeaders(provider, key, model)
+  const baseUrl = getProviderBaseUrl(provider)
+  const headers = getHeaders(provider, key)
   const requestBody = buildRequestBody(provider, model, messages, systemPrompt, reasoning)
 
   let fetchUrl: string
-  let fetchOptions: RequestInit
-
   switch (provider) {
     case 'anthropic':
       fetchUrl = `${baseUrl}/messages`
       break
     case 'deepseek':
     case 'openai':
+    case 'kimi':
+    case 'moonshot':
     case 'minimax':
     case 'openrouter':
     case 'nvidia':
@@ -270,7 +248,7 @@ Be concise, direct, and technically precise. The operator is technical and build
     default:
       fetchUrl = `${baseUrl}/chat/completions`
   }
-  fetchOptions = { method: 'POST', headers, body: JSON.stringify(requestBody) }
+  const fetchOptions: RequestInit = { method: 'POST', headers, body: JSON.stringify(requestBody) }
 
   let res: Response
   try {
@@ -287,7 +265,7 @@ Be concise, direct, and technically precise. The operator is technical and build
       errorMessage = errData.error?.message || errData.error?.type || JSON.stringify(errData).slice(0, 200)
     } catch {}
     console.error(`${provider} API error:`, errorMessage)
-    return Response.json({ error: `${provider} error: ${errorMessage}` }, { status: res.status })
+    return Response.json({ error: `${provider} error: ${errorMessage}`, provider, model }, { status: res.status })
   }
 
   if (!res.body) {
@@ -355,6 +333,7 @@ Be concise, direct, and technically precise. The operator is technical and build
       'X-Model-Provider': provider,
       'X-Model-Id': model,
       'X-Agent-Id': agentId || 'default',
+      'X-Key-Source': keyInfo.source,
     },
   })
 }

@@ -35,6 +35,8 @@ export type Provider =
   | 'gemini'
   | 'hermes'
   | 'openclaw'
+  | 'kimi'
+  | 'moonshot'
 
 export interface ModelConfig {
   id: string
@@ -52,6 +54,17 @@ export interface ModelConfig {
   thinking?: boolean
   /** OpenAI-style reasoning effort: 'low' | 'medium' | 'high' */
   reasoningEffort?: 'low' | 'medium' | 'high'
+  /**
+   * Live credential status — checked at app boot, refreshed on demand.
+   * - 'ok'        key works, model available
+   * - 'quota'     key works but account out of credits/quota
+   * - 'auth'      key invalid/expired
+   * - 'no-key'    no credential found
+   * - 'unknown'   not yet checked
+   */
+  status?: 'ok' | 'quota' | 'auth' | 'no-key' | 'unknown'
+  /** Live latency in ms (only set after a successful ping) */
+  latencyMs?: number
 }
 
 // ─── Provider colour map (used for badges, model tiles, dropdowns) ────────
@@ -65,6 +78,8 @@ export const PROVIDER_COLORS: Record<Provider, string> = {
   gemini:     '#4285f4',  // Google blue
   hermes:     '#f59e0b',  // amber
   openclaw:   '#06b6d4',  // OpenClaw cyan
+  kimi:       '#1abc9c',  // moonshot teal
+  moonshot:   '#1abc9c',  // moonshot teal
 }
 
 export const MODELS: Record<string, ModelConfig> = {
@@ -172,6 +187,21 @@ export const MODELS: Record<string, ModelConfig> = {
     color: PROVIDER_COLORS.openrouter,
     icon: '🔷',
   },
+
+  // ─── Kimi direct (Moonshot) ──────────────────────────────────────────
+  'kimi-k2.6': {
+    id: 'kimi-k2.6',
+    name: 'Kimi k2.6',
+    provider: 'kimi',
+    providerName: 'Moonshot',
+    contextWindow: 256_000,
+    maxOutput: 32_000,
+    costPerMillion: { input: 0.15, output: 0.60 },
+    defaultFor: ['long-context', 'multilingual'],
+    bestFor: ['Long documents', 'Chinese/English', 'Huge contexts', 'Web-aware Q&A'],
+    color: '#1abc9c',
+    icon: '🌙',
+  },
   'google/gemini-remy': {
     id: 'google/gemini-remy',
     name: 'Gemini-Remy',
@@ -186,8 +216,8 @@ export const MODELS: Record<string, ModelConfig> = {
   },
 
   // ─── Anthropic ─────────────────────────────────────────────────────
-  'claude-opus-4-5': {
-    id: 'claude-opus-4-5',
+  'claude-opus-4-1': {
+    id: 'claude-opus-4-1',
     name: 'Claude Opus 4',
     provider: 'anthropic',
     providerName: 'Anthropic',
@@ -211,9 +241,9 @@ export const MODELS: Record<string, ModelConfig> = {
     color: PROVIDER_COLORS.anthropic,
     icon: '🟠',
   },
-  'claude-haiku-4': {
-    id: 'claude-haiku-4',
-    name: 'Claude Haiku 4',
+  'claude-haiku-4-5': {
+    id: 'claude-haiku-4-5',
+    name: 'Claude Haiku 4.5',
     provider: 'anthropic',
     providerName: 'Anthropic',
     contextWindow: 200_000,
@@ -274,6 +304,7 @@ export const MODELS: Record<string, ModelConfig> = {
     bestFor: ['Deep reasoning', 'Research', 'Multi-step problems', 'Chain-of-thought'],
     color: PROVIDER_COLORS.openai,
     icon: '🧠',
+    status: 'quota',  // 2026-06-01: account quota exhausted
   },
 
   // ─── MiniMax ───────────────────────────────────────────────────────
@@ -289,6 +320,7 @@ export const MODELS: Record<string, ModelConfig> = {
     bestFor: ['Agent fleet', 'Long context', 'Free tier', 'Multi-agent orchestration'],
     color: PROVIDER_COLORS.minimax,
     icon: '🔷',
+    status: 'no-key',  // 2026-06-01: no MiniMax key configured
   },
   'MiniMax-M2.7-highspeed': {
     id: 'MiniMax-M2.7-highspeed',
@@ -327,6 +359,7 @@ export const MODELS: Record<string, ModelConfig> = {
     bestFor: ['Long context', 'Vision', 'Multimodal', 'Fast'],
     color: PROVIDER_COLORS.gemini,
     icon: '✨',
+    status: 'no-key',  // 2026-06-01: no Gemini key configured
   },
 
   // ─── Hermes (custom endpoint) ─────────────────────────────────────
@@ -363,7 +396,7 @@ export const DEFAULTS = {
   defaultModel: 'MiniMax-M3',
   fallbackModel: 'nvidia/deepseek-v4-flash',
   providerOrder: [
-    'minimax', 'nvidia', 'openrouter', 'anthropic', 'openai', 'gemini', 'deepseek', 'hermes', 'openclaw',
+    'minimax', 'nvidia', 'kimi', 'openrouter', 'anthropic', 'openai', 'gemini', 'deepseek', 'hermes', 'openclaw',
   ] as Provider[],
 }
 
