@@ -1,0 +1,105 @@
+# General Repair (High Value)
+
+**Count:** 97
+
+**Total Value:** GBP 2,387,532.49
+
+## Jobs
+
+- [[general-repair-high-value/2026-05_Bas-4625.md|Bas-4625]] - 2026-05-19 - GBP 31,020.00 - Quote
+- [[general-repair-high-value/2026-05_Bas-4616.md|Bas-4616]] - 2026-05-19 - GBP 17,260.50 - Quote
+- [[general-repair-high-value/2026-05_Bas-4570.md|Bas-4570]] - 2026-05-14 - GBP 19,975.20 - Quote
+- [[general-repair-high-value/2026-05_Bas-4564.md|Bas-4564]] - 2026-05-13 - GBP 51,360.00 - Quote
+- [[general-repair-high-value/2026-04_Bas-4363.md|Bas-4363]] - 2026-04-22 - GBP 22,083.30 - Quote
+- [[general-repair-high-value/2026-04_Bas-4266.md|Bas-4266]] - 2026-04-15 - GBP 34,800.00 - Quote
+- [[general-repair-high-value/2026-04_Bas-4270.md|Bas-4270]] - 2026-04-15 - GBP 5,399.52 - Quote
+- [[general-repair-high-value/2026-04_Bas-4237.md|Bas-4237]] - 2026-04-13 - GBP 37,200.00 - Quote
+- [[general-repair-high-value/2026-04_Bas-4211.md|Bas-4211]] - 2026-04-09 - GBP 5,400.00 - Unsuccessful
+- [[general-repair-high-value/2026-03_Bas-4140.md|Bas-4140]] - 2026-03-27 - GBP 38,040.00 - Quote
+- [[general-repair-high-value/2026-03_Bas-4127.md|Bas-4127]] - 2026-03-26 - GBP 19,200.00 - Quote
+- [[general-repair-high-value/2026-03_Bas-4126.md|Bas-4126]] - 2026-03-26 - GBP 15,900.00 - Unsuccessful
+- [[general-repair-high-value/2026-03_Bas-4083.md|Bas-4083]] - 2026-03-20 - GBP 13,560.00 - Unsuccessful
+- [[general-repair-high-value/2026-03_Bas-4041.md|Bas-4041]] - 2026-03-16 - GBP 31,800.00 - Quote
+- [[general-repair-high-value/2026-03_Bas-4012.md|Bas-4012]] - 2026-03-13 - GBP 5,356.80 - Quote
+- [[general-repair-high-value/2026-03_Bas-4009.md|Bas-4009]] - 2026-03-12 - GBP 47,820.00 - Unsuccessful
+- [[general-repair-high-value/2026-03_Bas-3961.md|Bas-3961]] - 2026-03-09 - GBP 10,848.00 - Quote
+- [[general-repair-high-value/2026-03_Bas-3954.md|Bas-3954]] - 2026-03-06 - GBP 34,620.00 - Unsuccessful
+- [[general-repair-high-value/2026-03_Bas-3934.md|Bas-3934]] - 2026-03-04 - GBP 8,166.00 - Unsuccessful
+- [[general-repair-high-value/2026-02_Bas-3875.md|Bas-3875]] - 2026-02-26 - GBP 8,160.00 - Unsuccessful
+- [[general-repair-high-value/2026-02_Bas-3807.md|Bas-3807]] - 2026-02-18 - GBP 5,076.00 - Completed
+- [[general-repair-high-value/2026-02_Bas-3809.md|Bas-3809]] - 2026-02-18 - GBP 9,360.00 - Quote
+- [[general-repair-high-value/2026-02_Bas-3788.md|Bas-3788]] - 2026-02-17 - GBP 6,912.00 - Unsuccessful
+- [[general-repair-high-value/2026-02_Bas-3745.md|Bas-3745]] - 2026-02-12 - GBP 5,832.00 - Unsuccessful
+- [[general-repair-high-value/2026-02_Bas-3688.md|Bas-3688]] - 2026-02-06 - GBP 11,100.00 - Unsuccessful
+- [[general-repair-high-value/2026-02_Bas-3683.md|Bas-3683]] - 2026-02-05 - GBP 239,409.60 - Unsuccessful
+- [[general-repair-high-value/2026-02_Bas-3659.md|Bas-3659]] - 2026-02-04 - GBP 21,084.00 - Quote
+- [[general-repair-high-value/2026-02_Bas-3660.md|Bas-3660]] - 2026-02-04 - GBP 5,040.00 - Completed
+- [[general-repair-high-value/2026-01_Bas-3548.md|Bas-3548]] - 2026-01-23 - GBP 5,194.11 - Unsuccessful
+- [[general-repair-high-value/2026-01_Bas-3518.md|Bas-3518]] - 2026-01-21 - GBP 106,800.00 - Unsuccessful
+- [[general-repair-high-value/2026-01_Bas-3519.md|Bas-3519]] - 2026-01-21 - GBP 111,000.00 - Unsuccessful
+- [[general-repair-high-value/2026-01_Bas-3517.md|Bas-3517]] - 2026-01-21 - GBP 87,600.00 - Unsuccessful
+- [[general-repair-high-value/2026-01_Bas-3513.md|Bas-3513]] - 2026-01-21 - GBP 5,128.56 - Completed
+- [[general-repair-high-value/2026-01_Bas-3463.md|Bas-3463]] - 2026-01-15 - GBP 24,840.00 - Unsuccessful
+- [[general-repair-high-value/2025-12_Bas-3303.md|Bas-3303]] - 2025-12-23 - GBP 5,328.00 - Unsuccessful
+- [[general-repair-high-value/2025-12_Bas-3268.md|Bas-3268]] - 2025-12-17 - GBP 8,268.00 - Completed
+- [[general-repair-high-value/2025-12_Bas-3262.md|Bas-3262]] - 2025-12-17 - GBP 5,460.00 - Completed
+- [[general-repair-high-value/2025-12_Bas-3257.md|Bas-3257]] - 2025-12-16 - GBP 13,884.00 - Quote
+- [[general-repair-high-value/2025-12_Bas-3219.md|Bas-3219]] - 2025-12-10 - GBP 5,086.84 - Unsuccessful
+- [[general-repair-high-value/2025-12_Bas-3184.md|Bas-3184]] - 2025-12-09 - GBP 6,747.01 - Quote
+- [[general-repair-high-value/2025-11_Bas-3081.md|Bas-3081]] - 2025-11-27 - GBP 15,153.60 - Quote
+- [[general-repair-high-value/2025-11_Bas-3059.md|Bas-3059]] - 2025-11-25 - GBP 36,960.00 - Quote
+- [[general-repair-high-value/2025-11_Bas-2986.md|Bas-2986]] - 2025-11-19 - GBP 10,920.00 - Unsuccessful
+- [[general-repair-high-value/2025-11_Bas-2933.md|Bas-2933]] - 2025-11-14 - GBP 37,188.00 - Quote
+- [[general-repair-high-value/2025-11_Bas-2892.md|Bas-2892]] - 2025-11-12 - GBP 38,935.20 - Unsuccessful
+- [[general-repair-high-value/2025-11_Bas-2901.md|Bas-2901]] - 2025-11-12 - GBP 5,580.00 - Work Order
+- [[general-repair-high-value/2025-11_Bas-2903.md|Bas-2903]] - 2025-11-12 - GBP 25,200.00 - Unsuccessful
+- [[general-repair-high-value/2025-11_Bas-2884.md|Bas-2884]] - 2025-11-10 - GBP 44,160.00 - Unsuccessful
+- [[general-repair-high-value/2025-11_Bas-2864.md|Bas-2864]] - 2025-11-07 - GBP 54,720.00 - Quote
+- [[general-repair-high-value/2025-11_Bas-2865.md|Bas-2865]] - 2025-11-07 - GBP 156,000.00 - Quote
+- [[general-repair-high-value/2025-11_Bas-2851.md|Bas-2851]] - 2025-11-06 - GBP 10,954.58 - Quote
+- [[general-repair-high-value/2025-11_Bas-2855.md|Bas-2855]] - 2025-11-06 - GBP 33,840.00 - Unsuccessful
+- [[general-repair-high-value/2025-11_Bas-1967A.md|Bas-1967A]] - 2025-11-05 - GBP 8,688.00 - Completed
+- [[general-repair-high-value/2025-11_Bas-1967B.md|Bas-1967B]] - 2025-11-05 - GBP 7,819.20 - Completed
+- [[general-repair-high-value/2025-11_Bas-2823.md|Bas-2823]] - 2025-11-04 - GBP 6,457.20 - Completed
+- [[general-repair-high-value/2025-10_Bas-2783.md|Bas-2783]] - 2025-10-31 - GBP 6,476.40 - Completed
+- [[general-repair-high-value/2025-10_Bas-2780.md|Bas-2780]] - 2025-10-30 - GBP 6,720.00 - Unsuccessful
+- [[general-repair-high-value/2025-10_Bas-2767.md|Bas-2767]] - 2025-10-28 - GBP 6,480.00 - Quote
+- [[general-repair-high-value/2025-10_Bas-2743.md|Bas-2743]] - 2025-10-27 - GBP 11,800.00 - Unsuccessful
+- [[general-repair-high-value/2025-10_Bas-2732.md|Bas-2732]] - 2025-10-23 - GBP 23,700.00 - Unsuccessful
+- [[general-repair-high-value/2025-10_Bas-2704.md|Bas-2704]] - 2025-10-21 - GBP 34,140.00 - Unsuccessful
+- [[general-repair-high-value/2025-09_Bas-2487.md|Bas-2487]] - 2025-09-24 - GBP 5,640.00 - Quote
+- [[general-repair-high-value/2025-09_Bas-2486.md|Bas-2486]] - 2025-09-24 - GBP 21,714.00 - Unsuccessful
+- [[general-repair-high-value/2025-09_Bas-2423.md|Bas-2423]] - 2025-09-16 - GBP 6,953.56 - Unsuccessful
+- [[general-repair-high-value/2025-09_Bas-2418.md|Bas-2418]] - 2025-09-16 - GBP 64,860.00 - Unsuccessful
+- [[general-repair-high-value/2025-09_Bas-2200A.md|Bas-2200A]] - 2025-09-12 - GBP 5,967.85 - Completed
+- [[general-repair-high-value/2025-09_Bas-2392.md|Bas-2392]] - 2025-09-11 - GBP 29,028.00 - Unsuccessful
+- [[general-repair-high-value/2025-09_Bas-2349.md|Bas-2349]] - 2025-09-08 - GBP 11,251.80 - Unsuccessful
+- [[general-repair-high-value/2025-09_Bas-2233A.md|Bas-2233A]] - 2025-09-03 - GBP 5,049.74 - Completed
+- [[general-repair-high-value/2025-09_Bas-2316.md|Bas-2316]] - 2025-09-01 - GBP 6,120.00 - Completed
+- [[general-repair-high-value/2025-08_Bas-2290.md|Bas-2290]] - 2025-08-28 - GBP 10,834.95 - Unsuccessful
+- [[general-repair-high-value/2025-08_Bas-2284.md|Bas-2284]] - 2025-08-27 - GBP 21,000.00 - Unsuccessful
+- [[general-repair-high-value/2025-08_Bas-2233.md|Bas-2233]] - 2025-08-18 - GBP 5,049.76 - Completed
+- [[general-repair-high-value/2025-08_Bas-2237.md|Bas-2237]] - 2025-08-18 - GBP 12,896.89 - Unsuccessful
+- [[general-repair-high-value/2025-08_Bas-2227.md|Bas-2227]] - 2025-08-15 - GBP 8,400.00 - Quote
+- [[general-repair-high-value/2025-08_Bas-2180B.md|Bas-2180B]] - 2025-08-13 - GBP 13,435.00 - Completed
+- [[general-repair-high-value/2025-08_Bas-2215.md|Bas-2215]] - 2025-08-13 - GBP 6,571.20 - Unsuccessful
+- [[general-repair-high-value/2025-08_Bas-2200.md|Bas-2200]] - 2025-08-11 - GBP 5,967.87 - Completed
+- [[general-repair-high-value/2025-08_Bas-2180.md|Bas-2180]] - 2025-08-07 - GBP 13,435.00 - Completed
+- [[general-repair-high-value/2025-08_Bas-2162.md|Bas-2162]] - 2025-08-05 - GBP 44,724.00 - Quote
+- [[general-repair-high-value/2025-08_Bas-2145.md|Bas-2145]] - 2025-08-01 - GBP 13,272.00 - Quote
+- [[general-repair-high-value/2025-08_Bas-2137.md|Bas-2137]] - 2025-08-01 - GBP 14,640.00 - Unsuccessful
+- [[general-repair-high-value/2025-07_Bas-2122.md|Bas-2122]] - 2025-07-31 - GBP 10,063.20 - Unsuccessful
+- [[general-repair-high-value/2025-07_Bas-2077.md|Bas-2077]] - 2025-07-24 - GBP 34,800.00 - Quote
+- [[general-repair-high-value/2025-07_Bas-2064.md|Bas-2064]] - 2025-07-23 - GBP 5,568.00 - Unsuccessful
+- [[general-repair-high-value/2025-07_Bas-2068.md|Bas-2068]] - 2025-07-23 - GBP 8,913.60 - Completed
+- [[general-repair-high-value/2025-07_Bas-2045.md|Bas-2045]] - 2025-07-18 - GBP 7,520.92 - Unsuccessful
+- [[general-repair-high-value/2025-07_Bas-2017.md|Bas-2017]] - 2025-07-16 - GBP 34,164.00 - Unsuccessful
+- [[general-repair-high-value/2025-07_Bas-1900.md|Bas-1900]] - 2025-07-01 - GBP 6,480.00 - Completed
+- [[general-repair-high-value/2025-06_Bas-1851.md|Bas-1851]] - 2025-06-25 - GBP 13,440.00 - Unsuccessful
+- [[general-repair-high-value/2025-06_Bas-1578.md|Bas-1578]] - 2025-06-09 - GBP 69,600.00 - Quote
+- [[general-repair-high-value/2025-05_Bas-1439.md|Bas-1439]] - 2025-05-27 - GBP 6,266.40 - Completed
+- [[general-repair-high-value/2025-05_Bas-1309.md|Bas-1309]] - 2025-05-21 - GBP 44,400.00 - Unsuccessful
+- [[general-repair-high-value/2025-05_Bas-1306.md|Bas-1306]] - 2025-05-21 - GBP 44,400.00 - Unsuccessful
+- [[general-repair-high-value/2025-05_Bas-1159.md|Bas-1159]] - 2025-05-14 - GBP 11,113.13 - Unsuccessful
+- [[general-repair-high-value/2025-05_80.md|80]] - 2025-05-09 - GBP 5,880.00 - Completed
+- [[general-repair-high-value/2025-01_5.md|5]] - 2025-01-16 - GBP 29,100.00 - Unsuccessful
