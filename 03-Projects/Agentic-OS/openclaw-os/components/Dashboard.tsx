@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { PanelRightOpen, PanelRightClose } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import AnimatedBackground from './ui/AnimatedBackground'
 import TopBar from './TopBar'
@@ -14,44 +15,19 @@ import OpenclawPanel from './panels/OpenclawPanel'
 import OverviewPanel from './panels/OverviewPanel'
 import JournalPanel from './panels/JournalPanel'
 import GoalsPanel from './panels/GoalsPanel'
-import AgentPlaceholder from './panels/AgentPlaceholder'
-
-// Agent panel IDs (these don't have real panels yet — they show AgentPlaceholder)
-const AGENT_PANELS = [
-  'agent-holly', 'agent-kryten', 'agent-sally', 'agent-grim',
-  'agent-oscar', 'agent-reggie', 'agent-claude', 'agent-hermes',
-]
-
-const PANELS: Record<string, React.ReactNode> = {
-  overview: <OverviewPanel />,
-  chat:     <ChatPanel />,
-  nodes:    <AgentMonitorPanel />,
-  missions: <MissionControlPanel />,
-  terminal: <TerminalPanel />,
-  openclaw: <OpenclawPanel />,
-  journal:  <JournalPanel />,
-  goals:    <GoalsPanel />,
-  // Agent placeholders
-  'agent-holly':  <AgentPlaceholder agentId="agent-holly" />,
-  'agent-kryten': <AgentPlaceholder agentId="agent-kryten" />,
-  'agent-sally':  <AgentPlaceholder agentId="agent-sally" />,
-  'agent-grim':   <AgentPlaceholder agentId="agent-grim" />,
-  'agent-oscar':  <AgentPlaceholder agentId="agent-oscar" />,
-  'agent-reggie': <AgentPlaceholder agentId="agent-reggie" />,
-  'agent-claude': <AgentPlaceholder agentId="agent-claude" />,
-  'agent-hermes': <AgentPlaceholder agentId="agent-hermes" />,
-}
+import AgentChatPanel from './panels/AgentChatPanel'
+import ModelRail from './ModelRail'
+import { AGENTS, type AgentId } from '@/lib/agents'
 
 const PANEL_ACCENT: Record<string, string> = {
-  overview: 'rgba(255,255,255,',
-  chat:     'rgba(168,85,247,',
-  nodes:    'rgba(6,182,212,',
-  missions: 'rgba(236,72,153,',
-  terminal: 'rgba(16,185,129,',
-  openclaw: 'rgba(245,158,11,',
-  journal:  'rgba(168,85,247,',
-  goals:    'rgba(249,115,22,',
-  // Agent panels
+  overview:  'rgba(255,255,255,',
+  chat:      'rgba(168,85,247,',
+  nodes:     'rgba(6,182,212,',
+  missions:  'rgba(236,72,153,',
+  terminal:  'rgba(16,185,129,',
+  openclaw:  'rgba(245,158,11,',
+  journal:   'rgba(168,85,247,',
+  goals:     'rgba(249,115,22,',
   'agent-holly':  'rgba(6,182,212,',
   'agent-kryten': 'rgba(249,115,22,',
   'agent-sally':  'rgba(139,92,246,',
@@ -60,12 +36,32 @@ const PANEL_ACCENT: Record<string, string> = {
   'agent-reggie': 'rgba(16,185,129,',
   'agent-claude': 'rgba(168,85,247,',
   'agent-hermes': 'rgba(251,191,36,',
+  'agent-direct': 'rgba(255,255,255,',
+}
+
+const AGENT_IDS = Object.keys(AGENTS) as AgentId[]
+
+function isAgent(id: string): id is AgentId {
+  return (AGENT_IDS as string[]).includes(id)
 }
 
 export default function Dashboard() {
   const activePanel    = useStore((s) => s.activePanel)
   const [showSettings, setShowSettings] = useState(false)
+  const [railOpen, setRailOpen] = useState(true)
   const accent = PANEL_ACCENT[activePanel] || 'rgba(255,255,255,'
+
+  // Resolve which agent is active (for the model rail)
+  const activeAgentId: AgentId | null = isAgent(activePanel) ? activePanel : null
+  const activeAgent = activeAgentId ? AGENTS[activeAgentId] : null
+
+  // Per-agent model resolution
+  const agentModels = useStore((s) => s.agentModels)
+  const setAgentModel = useStore((s) => s.setAgentModel)
+  const activeModelId =
+    (activeAgentId && agentModels[activeAgentId]) ||
+    (activeAgent?.defaultModel) ||
+    'MiniMax-M3'
 
   return (
     <div
@@ -74,7 +70,6 @@ export default function Dashboard() {
     >
       <AnimatedBackground />
 
-      {/* Ambient glow that shifts per-panel */}
       <motion.div
         key={activePanel + '-glow'}
         initial={{ opacity: 0 }}
@@ -91,15 +86,12 @@ export default function Dashboard() {
         }}
       />
 
-      {/* Top bar */}
       <TopBar onSettings={() => setShowSettings(true)} />
 
-      {/* Body */}
       <div className="flex flex-1 overflow-hidden" style={{ position: 'relative', zIndex: 10 }}>
         <Sidebar />
 
-        {/* Main panel area */}
-        <main className="flex-1 overflow-hidden p-4">
+        <main className="flex-1 overflow-hidden p-4 min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activePanel}
@@ -117,7 +109,6 @@ export default function Dashboard() {
                 ].join(', '),
               }}
             >
-              {/* Top shimmer line */}
               <div
                 className="absolute top-0 left-[10%] right-[10%] h-px pointer-events-none"
                 style={{
@@ -125,15 +116,66 @@ export default function Dashboard() {
                   zIndex: 2,
                 }}
               />
-              <div className="h-full overflow-hidden">
-                {PANELS[activePanel] ?? <AgentPlaceholder agentId={activePanel} />}
+              <div className="h-full overflow-hidden flex">
+                {/* Main panel content */}
+                <div className="flex-1 min-w-0 h-full overflow-hidden">
+                  {activePanel === 'overview' && <OverviewPanel />}
+                  {activePanel === 'chat' && <ChatPanel />}
+                  {activePanel === 'nodes' && <AgentMonitorPanel />}
+                  {activePanel === 'missions' && <MissionControlPanel />}
+                  {activePanel === 'terminal' && <TerminalPanel />}
+                  {activePanel === 'openclaw' && <OpenclawPanel />}
+                  {activePanel === 'journal' && <JournalPanel />}
+                  {activePanel === 'goals' && <GoalsPanel />}
+                  {activeAgentId && <AgentChatPanel agentId={activeAgentId} />}
+                </div>
+
+                {/* Model rail (only when an agent is active) */}
+                {activeAgentId && (
+                  <>
+                    {!railOpen && (
+                      <div className="p-2 flex items-start">
+                        <button
+                          onClick={() => setRailOpen(true)}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                          style={{
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid var(--glass-border)',
+                            color: 'var(--text-3)',
+                          }}
+                          title="Show model rail"
+                        >
+                          <PanelRightOpen size={14} />
+                        </button>
+                      </div>
+                    )}
+                    <AnimatePresence>
+                      {railOpen && (
+                        <motion.div
+                          initial={{ width: 0, opacity: 0 }}
+                          animate={{ width: 300, opacity: 1 }}
+                          exit={{ width: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                          className="h-full overflow-hidden flex-shrink-0"
+                        >
+                          <ModelRail
+                            agentId={activeAgentId}
+                            currentModelId={activeModelId}
+                            onSelect={(modelId) => setAgentModel(activeAgentId, modelId)}
+                            onAddModel={() => setShowSettings(true)}
+                            onToggleCollapse={() => setRailOpen(false)}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                )}
               </div>
             </motion.div>
           </AnimatePresence>
         </main>
       </div>
 
-      {/* Settings overlay */}
       <AnimatePresence>
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       </AnimatePresence>

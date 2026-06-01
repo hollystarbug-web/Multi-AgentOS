@@ -20,7 +20,12 @@ export function todayStr(): string {
   return new Date().toISOString().slice(0, 10) // YYYY-MM-DD
 }
 
-export function chatFilePath(date = todayStr()): string {
+export function chatFilePath(date = todayStr(), agentName?: string): string {
+  // Per-agent chat files. Falls back to single daily file when no agent.
+  if (agentName) {
+    const slug = agentName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    return `${VAULT_ROOT}/${PROJECT_DIR}/chats/${slug}/${date}.md`
+  }
   return `${VAULT_ROOT}/${PROJECT_DIR}/chats/${date}.md`
 }
 
@@ -82,10 +87,11 @@ export function frontmatter(title: string, tags: string[], date = todayStr()): s
 
 // ── File header builders (written once when file is new) ─────────────────────
 
-export function chatFileHeader(date: string): string {
+export function chatFileHeader(date: string, agentName?: string): string {
+  const title = agentName ? `Chat Log — ${agentName} — ${date}` : `Chat Log — ${date}`
   return [
-    frontmatter(`Chat Log — ${date}`, ['agentic-os', 'chat', 'daily-log'], date),
-    `# 🤖 Chat Log — ${date}`,
+    frontmatter(title, ['agentic-os', 'chat', 'daily-log'], date),
+    `# 🤖 ${title}`,
     '',
     `> Auto-saved from Agentic OS dashboard · [[${PROJECT_DIR.replace('03-Projects/', '')}]]`,
     '',
@@ -124,16 +130,20 @@ export function formatChatEntry(
   userContent: string,
   assistantContent: string,
   timestamp?: Date,
+  agentName?: string,
+  modelName?: string,
 ): string {
   const ts = (timestamp ?? new Date()).toLocaleTimeString('en-US', {
     hour: '2-digit', minute: '2-digit', hour12: true,
   })
+  const agent = agentName || 'Claude'
+  const modelLine = modelName ? ` _(${modelName})_` : ''
   return [
     `### ${ts}`,
     '',
     `**Justin:** ${userContent}`,
     '',
-    `**Claude:** ${assistantContent}`,
+    `**${agent}:**${modelLine} ${assistantContent}`,
     '',
     '---',
     '',

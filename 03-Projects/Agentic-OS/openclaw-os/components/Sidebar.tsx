@@ -48,6 +48,7 @@ const AGENTS: NavItem[] = [
   { id: 'agent-reggie',   label: 'Reggie',    icon: Shield,         color: 'rgba(16,185,129,1)',  provider: 'openclaw',  type: 'agent' },
   { id: 'agent-claude',   label: 'Claude',    icon: Brain,          color: 'rgba(168,85,247,1)',  provider: 'anthropic', type: 'agent' },
   { id: 'agent-hermes',   label: 'Hermes',    icon: Zap,            color: 'rgba(251,191,36,1)',  provider: 'custom',    type: 'agent' },
+  { id: 'agent-direct',   label: 'Direct',    icon: MessageSquare,  color: 'rgba(255,255,255,1)', provider: 'direct',    type: 'agent' },
 ]
 
 const PANELS: NavItem[] = [
@@ -122,6 +123,7 @@ function NavRow({ item, isActive, onClick }: { item: NavItem; isActive: boolean;
             <span className="text-[10px]" style={{ color: 'var(--text-4)' }}>
               {item.provider === 'openclaw' ? 'OpenClaw'
                : item.provider === 'anthropic' ? 'Anthropic'
+               : item.provider === 'direct' ? 'No persona'
                : 'Custom'}
             </span>
           </div>

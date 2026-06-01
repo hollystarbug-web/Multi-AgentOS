@@ -1,32 +1,41 @@
 import { NextRequest } from 'next/server'
+import { AGENTS, getAgent, type AgentId } from '@/lib/agents'
 
 export const runtime = 'nodejs'
 
 // ─── Provider detection ────────────────────────────────────────────────────────
 
-function getProvider(model: string): 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' | 'nvidia' {
+type Provider = 'anthropic' | 'openai' | 'deepseek' | 'minimax' | 'openrouter' | 'nvidia' | 'gemini' | 'hermes' | 'openclaw'
+
+function getProvider(model: string): Provider {
   if (model.startsWith('claude-')) return 'anthropic'
   if (model.startsWith('deepseek-')) return 'deepseek'
   if (model.startsWith('gpt-') || model.startsWith('o4-') || model.startsWith('o3-') || model.startsWith('chatgpt-')) return 'openai'
   if (model.startsWith('MiniMax-')) return 'minimax'
-  if (model.startsWith('nvidia/')) return 'nvidia'  // NVIDIA NIM (e.g. nvidia/deepseek-v4-flash)
-  if (model.includes('/')) return 'openrouter'  // e.g. qwen/qwen3.6-plus via openrouter
-  return 'openai'  // default fallback
+  if (model.startsWith('nvidia/')) return 'nvidia'
+  if (model.startsWith('gemini')) return 'gemini'
+  if (model.startsWith('hermes')) return 'hermes'
+  if (model.startsWith('openclaw')) return 'openclaw'
+  if (model.includes('/')) return 'openrouter'
+  return 'openai'
 }
 
-function getBaseUrl(provider: string): string {
+function getBaseUrl(provider: Provider): string {
   switch (provider) {
-    case 'anthropic': return 'https://api.anthropic.com/v1'
-    case 'deepseek': return 'https://api.deepseek.com/v1'
-    case 'openai': return 'https://api.openai.com/v1'
-    case 'minimax': return 'https://api.minimax.chat/v1'
+    case 'anthropic':  return 'https://api.anthropic.com/v1'
+    case 'deepseek':   return 'https://api.deepseek.com/v1'
+    case 'openai':     return 'https://api.openai.com/v1'
+    case 'minimax':    return 'https://api.minimax.chat/v1'
     case 'openrouter': return 'https://openrouter.ai/api/v1'
-    case 'nvidia': return 'https://integrate.api.nvidia.com/v1'
-    default: return 'https://api.openai.com/v1'
+    case 'nvidia':     return 'https://integrate.api.nvidia.com/v1'
+    case 'gemini':     return 'https://generativelanguage.googleapis.com/v1beta/openai'
+    case 'hermes':     return process.env.HERMES_BASE_URL || 'http://localhost:11434/v1'
+    case 'openclaw':   return process.env.OPENCLAW_BASE_URL || 'http://localhost:18789/v1'
+    default:           return 'https://api.openai.com/v1'
   }
 }
 
-function getHeaders(provider: string, key: string, model: string): Record<string, string> {
+function getHeaders(provider: Provider, key: string, model: string): Record<string, string> {
   switch (provider) {
     case 'anthropic':
       return {
@@ -39,6 +48,9 @@ function getHeaders(provider: string, key: string, model: string): Record<string
     case 'openai':
     case 'openrouter':
     case 'nvidia':
+    case 'gemini':
+    case 'hermes':
+    case 'openclaw':
       return {
         'Authorization': `Bearer ${key}`,
         'content-type': 'application/json',
@@ -54,8 +66,13 @@ function getHeaders(provider: string, key: string, model: string): Record<string
   }
 }
 
-function buildRequestBody(provider: string, model: string, messages: Array<{ role: string; content: string }>, systemPrompt?: string): Record<string, unknown> {
-  // Build messages array with optional system prompt prepended
+function buildRequestBody(
+  provider: Provider,
+  model: string,
+  messages: Array<{ role: string; content: string }>,
+  systemPrompt?: string,
+  reasoning?: { effort: 'low' | 'medium' | 'high' },
+): Record<string, unknown> {
   const msgs = [...messages]
   if (systemPrompt) {
     msgs.unshift({ role: 'system', content: systemPrompt })
@@ -77,25 +94,34 @@ function buildRequestBody(provider: string, model: string, messages: Array<{ rol
     case 'openai':
     case 'minimax':
     case 'openrouter':
-    case 'nvidia': {
-      // NVIDIA NIM: map internal model ID to NVIDIA's model name
+    case 'nvidia':
+    case 'gemini':
+    case 'hermes':
+    case 'openclaw': {
       let actualModel = model
       if (provider === 'nvidia') {
-        actualModel = model.replace('nvidia/', 'deepseek-ai/') // nvidia/deepseek-v4-flash → deepseek-ai/deepseek-v4-flash
+        actualModel = model.replace('nvidia/', 'deepseek-ai/')
       }
-      return {
+      const body: Record<string, unknown> = {
         model: actualModel,
         messages: msgs.map(m => ({ role: m.role, content: m.content })),
         stream: true,
-        ...(provider === 'minimax' ? { max_tokens: 8192 } : {}),
       }
+      if (provider === 'minimax' || provider === 'openai') {
+        body.max_tokens = 8192
+      }
+      // OpenAI-style reasoning_effort for thinking models (gpt-5.5-thinking, o4-mini, etc.)
+      if (reasoning && (provider === 'openai' || provider === 'openrouter')) {
+        body.reasoning_effort = reasoning.effort
+      }
+      return body
     }
     default:
       return { model, messages: msgs.map(m => ({ role: m.role, content: m.content })), stream: true }
   }
 }
 
-function extractDelta(provider: string, event: Record<string, unknown>): string | null {
+function extractDelta(provider: Provider, event: Record<string, unknown>): string | null {
   try {
     switch (provider) {
       case 'anthropic':
@@ -107,12 +133,19 @@ function extractDelta(provider: string, event: Record<string, unknown>): string 
       case 'openai':
       case 'minimax':
       case 'openrouter':
-      case 'nvidia': {
+      case 'nvidia':
+      case 'gemini':
+      case 'hermes':
+      case 'openclaw': {
         const choices = event.choices as Array<Record<string, unknown>> | undefined
         if (choices && choices.length > 0) {
           const delta = choices[0].delta as Record<string, unknown> | undefined
           if (delta && typeof delta.content === 'string') return delta.content
           if (delta && typeof delta.text === 'string') return delta.text
+          // reasoning_content (DeepSeek R1, etc.) — surface it transparently
+          if (delta && typeof (delta as any).reasoning_content === 'string') {
+            return (delta as any).reasoning_content
+          }
         }
         break
       }
@@ -121,26 +154,23 @@ function extractDelta(provider: string, event: Record<string, unknown>): string 
   return null
 }
 
-function isDoneEvent(provider: string, event: Record<string, unknown>): boolean {
+function isDoneEvent(provider: Provider, event: Record<string, unknown>): boolean {
   switch (provider) {
     case 'anthropic': return event.type === 'message_stop' || event.type === 'message_delta'
     case 'deepseek':
     case 'openai':
     case 'minimax':
     case 'openrouter':
-    case 'nvidia': {
+    case 'nvidia':
+    case 'gemini':
+    case 'hermes':
+    case 'openclaw': {
       const choices = event.choices as Array<Record<string, unknown>> | undefined
       return choices?.[0]?.finish_reason != null
     }
     default: return false
   }
 }
-
-// ─── System prompt ─────────────────────────────────────────────────────────────
-
-const SYSTEM_PROMPT = `You are an AI assistant running inside Agentic OS — a custom AI mission control dashboard. You're being accessed from the operator's MacBook via a Next.js app that manages their AI agent fleet: a Hetzner VPS running OpenClaw (with agents Holly, Kryten, Sally, Grim, Oscar, Reggie), and a Mac Mini browsing node.
-
-Be concise, direct, and technically precise. You can assist with: coding, infrastructure questions, agent orchestration strategy, debugging, analysis, and general tasks. The operator is technical and building out an AI agent infrastructure.`
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
@@ -152,40 +182,73 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { messages, apiKey, deepseekApiKey, openaiApiKey, nvidiaApiKey, model: requestedModel } = body as {
+  const {
+    messages,
+    apiKey, deepseekApiKey, openaiApiKey, nvidiaApiKey,
+    openrouterApiKey, geminiApiKey, hermesApiKey, openclawApiKey,
+    model: requestedModel,
+    agentId,
+  } = body as {
     messages: Array<{ role: string; content: string }>
     apiKey?: string
     deepseekApiKey?: string
     openaiApiKey?: string
     nvidiaApiKey?: string
+    openrouterApiKey?: string
+    geminiApiKey?: string
+    hermesApiKey?: string
+    openclawApiKey?: string
     model?: string
+    agentId?: string
   }
 
-  // Default to nvidia/deepseek-v4-flash if no model specified (FREE)
-  const model = (requestedModel as string) || 'nvidia/deepseek-v4-flash'
+  // Resolve the system prompt from the agent registry.
+  // Free agents (e.g. agent-direct) have an empty prompt and get the default.
+  const DEFAULT_SYSTEM_PROMPT = `You are an AI assistant running inside Agentic OS — a custom AI mission control dashboard. You're being accessed from the operator's MacBook via a Next.js app that manages their AI agent fleet: a Hetzner VPS running OpenClaw (with agents Holly, Kryten, Sally, Grim, Oscar, Reggie), and a Mac Mini browsing node.
+
+Be concise, direct, and technically precise. The operator is technical and building out an AI agent infrastructure.`
+
+  let systemPrompt = DEFAULT_SYSTEM_PROMPT
+  if (agentId) {
+    const agent = getAgent(agentId)
+    if (agent.systemPrompt) systemPrompt = agent.systemPrompt
+    else if (agent.freeAgent) systemPrompt = '' // truly free
+  }
+
+  // Default to MiniMax-M3 if no model specified (free, fast, agent-friendly)
+  const model = (requestedModel as string) || 'MiniMax-M3'
   const provider = getProvider(model)
 
   // Get the right API key for this provider
   let key = ''
   switch (provider) {
-    case 'anthropic': key = (apiKey as string) || ''; break
-    case 'deepseek': key = (deepseekApiKey as string) || ''; break
-    case 'openai': key = (openaiApiKey as string) || ''; break
-    case 'minimax': key = (apiKey as string) || ''; break  // MiniMax uses same as Anthropic format
-    case 'openrouter': key = (openaiApiKey as string) || process.env.OPENROUTER_API_KEY || ''; break
-    case 'nvidia': key = (nvidiaApiKey as string) || ''; break
-    default: key = (apiKey as string) || ''
+    case 'anthropic':  key = (apiKey as string) || ''; break
+    case 'deepseek':   key = (deepseekApiKey as string) || ''; break
+    case 'openai':     key = (openaiApiKey as string) || ''; break
+    case 'minimax':    key = (apiKey as string) || process.env.MINIMAX_API_KEY || ''; break
+    case 'openrouter': key = (openrouterApiKey as string) || (openaiApiKey as string) || process.env.OPENROUTER_API_KEY || ''; break
+    case 'nvidia':     key = (nvidiaApiKey as string) || ''; break
+    case 'gemini':     key = (geminiApiKey as string) || process.env.GEMINI_API_KEY || ''; break
+    case 'hermes':     key = (hermesApiKey as string) || ''; break
+    case 'openclaw':   key = (openclawApiKey as string) || ''; break
+    default:           key = (apiKey as string) || ''
   }
 
-  if (!key) {
+  // For thinking models, pull reasoning effort from the model config
+  let reasoning: { effort: 'low' | 'medium' | 'high' } | undefined
+  if (model === 'gpt-5.5-thinking' || model === 'gpt-5.5-thinking' || model === 'o4-mini') {
+    reasoning = { effort: 'high' }
+  }
+
+  if (!key && provider !== 'hermes' && provider !== 'openclaw') {
     return Response.json({
-      error: `No API key for ${provider}. Add your ${provider} API key in Settings → ${provider} section.`,
+      error: `No API key for ${provider}. Add your ${provider} API key in Settings → API Keys.`,
     }, { status: 401 })
   }
 
   const baseUrl = getBaseUrl(provider)
   const headers = getHeaders(provider, key, model)
-  const requestBody = buildRequestBody(provider, model, messages, SYSTEM_PROMPT)
+  const requestBody = buildRequestBody(provider, model, messages, systemPrompt, reasoning)
 
   let fetchUrl: string
   let fetchOptions: RequestInit
@@ -193,20 +256,21 @@ export async function POST(req: NextRequest) {
   switch (provider) {
     case 'anthropic':
       fetchUrl = `${baseUrl}/messages`
-      fetchOptions = { method: 'POST', headers, body: JSON.stringify(requestBody) }
       break
     case 'deepseek':
     case 'openai':
     case 'minimax':
     case 'openrouter':
     case 'nvidia':
+    case 'gemini':
+    case 'hermes':
+    case 'openclaw':
       fetchUrl = `${baseUrl}/chat/completions`
-      fetchOptions = { method: 'POST', headers, body: JSON.stringify(requestBody) }
       break
     default:
       fetchUrl = `${baseUrl}/chat/completions`
-      fetchOptions = { method: 'POST', headers, body: JSON.stringify(requestBody) }
   }
+  fetchOptions = { method: 'POST', headers, body: JSON.stringify(requestBody) }
 
   let res: Response
   try {
@@ -232,7 +296,6 @@ export async function POST(req: NextRequest) {
 
   // ── Stream the response ────────────────────────────────────────────────────
   const encoder = new TextEncoder()
-
   const readable = new ReadableStream({
     async start(controller) {
       const reader = res.body!.getReader()
@@ -246,7 +309,7 @@ export async function POST(req: NextRequest) {
 
           buffer += decoder.decode(value, { stream: true })
           const lines = buffer.split('\n')
-          buffer = lines.pop() || ''  // Keep incomplete line for next iteration
+          buffer = lines.pop() || ''
 
           for (const line of lines) {
             const trimmed = line.trim()
@@ -275,7 +338,6 @@ export async function POST(req: NextRequest) {
             }
           }
         }
-        // Final done signal
         controller.enqueue(encoder.encode(`data: [DONE]\n\n`))
         controller.close()
       } catch (streamErr) {
@@ -292,6 +354,7 @@ export async function POST(req: NextRequest) {
       Connection: 'keep-alive',
       'X-Model-Provider': provider,
       'X-Model-Id': model,
+      'X-Agent-Id': agentId || 'default',
     },
   })
 }
