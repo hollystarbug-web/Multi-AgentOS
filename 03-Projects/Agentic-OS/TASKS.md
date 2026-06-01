@@ -136,11 +136,20 @@
 
 Note: OpenRouter API key (`sk-or-…da38`) is Justin's account — stored in vault credentials.
 
-### Task 34 — Per-Agent Chat Panels (Coming Next)
-- [ ] Build dedicated chat panel for each agent (Holly, Kryten, Sally, etc.)
-- [ ] Each agent panel pre-configured with that agent's system prompt
-- [ ] Agent can use any model (user selects from model dropdown)
-- [ ] Panel shows agent name, avatar, provider badge
+### Task 34 — Per-Agent Chat Panels ✅
+- [x] Created `lib/agents.ts` — 9-agent registry (Holly, Kryten, Sally, Grim, Oscar, Reggie, Claude, Hermes, Direct) with persona, system prompt, accent color, default model, icon
+- [x] Updated `lib/models.ts` — added 7 new models: Gemini-Remy, Hermes, OpenClaw, MiniMax M3, Kimi, Claude Opus 4, Claude Haiku 4, GPT-5.5-thinking
+- [x] Updated `lib/store.ts` — `agentMessages: Record<AgentId, ChatMessage[]>`, `agentModels: Record<AgentId, string>`, `addAgentMessage`, `clearAgentMessages`, `setAgentModel`, version 2 migration
+- [x] Created `components/panels/AgentChatPanel.tsx` — parameterised chat panel with agent header strip, persona popover, accent-tinted bubbles, model selector integration
+- [x] Created `components/ModelRail.tsx` — collapsible right rail with hero card (current model + pricing), search, grouped grid by provider, +Add model tile
+- [x] Refactored `components/Dashboard.tsx` — 3-column layout (sidebar / chat / model rail), rail collapse toggle
+- [x] Added `agent-direct` to Sidebar (9th agent, no persona) — replaces legacy master Chat panel
+- [x] Default landing = `agent-holly` (was `chat`)
+- [x] Updated `app/api/chat/route.ts` — accepts `agentId`, looks up persona, supports new providers (gemini, hermes, openclaw, minimax, kimi), GPT-5.5-thinking mode
+- [x] Updated `lib/vault.ts` — per-agent vault paths `chats/<slug>/YYYY-MM-DD.md`, agentName + modelName in formatChatEntry
+- [x] Verified all 9 agents render with 0 page errors (Playwright probe)
+- [x] Committed: `8276466` (code) + `d89eb36` (learning)
+- [x] Screenshots saved to `docs/screenshots/agent-*.png`
 
 
 ### Task 18 — Deploy to VPS & Obsidian Vault Setup
