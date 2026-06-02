@@ -1,148 +1,195 @@
-# 🦞 Openclaw OS — Mission Control
+# OpenClaw OS
 
-A gorgeous glassmorphism AI agent command center. Built with **Next.js 14**, **Tailwind CSS**, and **Framer Motion**.
+> A local, beautiful, dopamine-inducing dashboard for orchestrating multiple AI agents across your machines.
 
-Manage your Claude connection, monitor your Hetzner VPS and Mac Mini nodes, dispatch tasks to agents, stream logs, and embed Openclaw — all from one beautiful local dashboard on your MacBook.
+OpenClaw OS is a Next.js 14 app that runs on your Mac, talks to your VPS, your Mac Mini, and your Obsidian vault, and gives you a single dark-mode glass UI for chat, mission control, terminal access, node monitoring, journal, goals, and a vault-backed journal of every conversation.
 
----
-
-## What's Inside
-
-| Panel | Description |
-|-------|-------------|
-| **Overview** | Fleet status hero, node grid, quick panel navigation |
-| **Claude Chat** | Real-time streaming chat with Claude API (SSE) |
-| **Node Monitor** | Live CPU/RAM/uptime for Hetzner VPS, Mac Mini, MacBook |
-| **Mission Control** | Create, dispatch, and track agent missions |
-| **Terminal** | Live log stream with filtering + interactive command input |
-| **Openclaw** | Embed your Hetzner Openclaw instance in an iframe |
+It ships with **9 pre-configured agents** (Holly, Kryten, Sally, Grim, Oscar, Reggie, Claude, Hermes, Direct), each with its own persona, accent colour, and default model. The persona prompts live in `prompts/<agent>.md` — edit them to make an agent your own.
 
 ---
 
-## Quick Start
-
-### 1. Clone & install
+## 🚀 Quick Start (one command)
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/openclaw-os/main/install.sh | bash
+```
+
+This will:
+
+1. Check for Node 20+ (offers help if missing)
+2. Clone the repo to `~/openclaw-os`
+3. Run `npm install`
+4. Launch the **setup wizard** (interactive) — it auto-detects your OS, finds your Obsidian vault, and asks for the missing pieces
+5. Print `npm run dev` so you can launch
+
+Open **http://localhost:3000** and you're in.
+
+---
+
+## 🎯 What you get
+
+| Panel | What it does |
+|---|---|
+| **Chat** | Streamed conversation with any of 9 agents × 14 models × 6 providers |
+| **Model Rail** | Browse all models grouped by provider, with cost indicators |
+| **Goals** | Monthly goal tracker with checkboxes — auto-saved to your Obsidian vault |
+| **Journal** | Daily markdown journal with voice input — auto-saved |
+| **Node Monitor** | Live status of Hetzner VPS, Mac Mini, MacBook |
+| **Mission Control** | Create, dispatch, and track agent tasks |
+| **Terminal** | SSH terminal into the Hetzner VPS rendered in-browser |
+| **OpenClaw** | Embed any URL (e.g. an OpenClaw instance) in an iframe |
+| **Agent Panels** | Per-agent chat — Holly, Kryten, Sally, Grim, Oscar, Reggie, Claude, Hermes, Direct |
+
+---
+
+## ⚙️ Configuration
+
+Everything lives in **one file**: `config.yaml` (created by the setup wizard).
+
+```yaml
+vault:
+  localPath: "~/Documents/Obsidian"
+  projectDir: "Agentic OS"
+
+nodes:
+  - id: hetzner-vps
+    name: "Hetzner VPS"
+    host: "100.87.207.10"
+  - id: mac-mini
+    name: "Mac Mini"
+    host: "100.91.33.1"
+
+providers:
+  defaultModel: "nvidia/deepseek-v4-flash"
+  fallbackModel: "MiniMax-M2.7-highspeed"
+
+agents:
+  - id: agent-holly
+    name: Holly
+    icon: Sparkles
+    accent: "rgba(6,182,212,"
+    defaultModel: claude-haiku-4-5
+    promptFile: "prompts/agent-holly.md"
+  # …etc
+```
+
+**To re-configure at any time:** `npm run setup`
+
+**To validate your config:** `npm run config:validate`
+
+**To print the active config:** `npm run config:show`
+
+---
+
+## 🔑 API Keys
+
+API keys live in `.env.local` (gitignored). Set them via the setup wizard or the in-app **Settings modal** (⚙️ top-right).
+
+Supported providers:
+
+| Provider | Env var | Get key |
+|---|---|---|
+| Anthropic (Claude) | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
+| OpenAI (GPT) | `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com) |
+| DeepSeek | `DEEPSEEK_API_KEY` | [platform.deepseek.com](https://platform.deepseek.com) |
+| OpenRouter | `OPENROUTER_API_KEY` | [openrouter.ai](https://openrouter.ai) |
+| NVIDIA NIM (FREE) | `NVIDIA_API_KEY` | [build.nvidia.com](https://build.nvidia.com) |
+| Google Gemini | `GEMINI_API_KEY` | [aistudio.google.com](https://aistudio.google.com) |
+
+---
+
+## 🤖 Agents
+
+Each agent has:
+- A **persona** (system prompt) in `prompts/<id>.md`
+- An **accent colour** for sidebar dot, message tint, header strip
+- A **default model** (overrideable per-chat)
+- A **provider** (Anthropic, Direct, Custom)
+
+**To add a new agent:**
+
+1. Add an entry to `config.yaml` under `agents:`
+2. Create `prompts/<your-agent-id>.md` with the system prompt
+3. Restart the dev server
+
+**To customise an existing agent:** edit its `prompts/<id>.md` file. The next chat turn will use the new prompt.
+
+---
+
+## 🗄️ Vault
+
+OpenClaw OS auto-saves your chats, journal, goals, and missions to an Obsidian vault. The vault must be a regular folder on disk (or accessible over SSH).
+
+**Where it writes:**
+
+```
+<vault>/<projectDir>/
+├── chats/
+│   ├── agent-holly/2026-06-02.md
+│   ├── agent-kryten/2026-06-02.md
+│   └── …one folder per agent
+├── journal/2026-06-02.md
+├── goals/2026-06.md          ← one per month
+├── missions.md               ← rolling
+└── bugs/                     ← error reports
+```
+
+Each save triggers a `git commit` if the vault is a git repo (recommended).
+
+**Local vault:** point `vault.localPath` at any folder.
+**Remote vault:** enable `vault.ssh.enabled` and set host/user/key.
+
+---
+
+## 🛠️ Tech stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| UI | React 18 + Tailwind + Framer Motion |
+| State | Zustand + persist (localStorage) |
+| AI | Multi-provider: Anthropic, OpenAI, DeepSeek, OpenRouter, NVIDIA NIM, Gemini |
+| SSH | ssh2 |
+| Voice | Web Speech API (no API key) |
+| Config | YAML + Zod schema validation |
+| Setup | Interactive wizard with auto-detection |
+
+---
+
+## 🧪 Development
+
+```bash
+git clone https://github.com/hollystarbug-web/openclaw-os.git
 cd openclaw-os
 npm install
+npm run setup          # interactive
+npm run dev            # → http://localhost:3000
 ```
 
-### 2. Configure environment
+Other scripts:
 
-```bash
-cp .env.local.example .env.local
-```
-
-Edit `.env.local`:
-
-```env
-ANTHROPIC_API_KEY=sk-ant-api03-...
-
-# Optional: set these as defaults (can also set in the in-app Settings)
-NEXT_PUBLIC_HETZNER_HOST=65.21.x.x
-NEXT_PUBLIC_MAC_MINI_HOST=192.168.1.x
-NEXT_PUBLIC_OPENCLAW_URL=http://65.21.x.x:3000
-```
-
-### 3. Run
-
-```bash
-npm run dev
-```
-
-Open **http://localhost:3000** in your browser.
+| Script | What |
+|---|---|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run setup` | Re-run setup wizard |
+| `npm run config:show` | Print active config |
+| `npm run config:validate` | Validate config against schema |
 
 ---
 
-## In-App Settings
+## 🤝 Contributing
 
-Click the ⚙️ gear icon in the top-right to open Settings:
-
-- **Anthropic API Key** — paste your `sk-ant-...` key (stored in browser localStorage, never leaves your machine)
-- **Hetzner VPS IP** — updates the Node Monitor card
-- **Mac Mini IP** — updates the Node Monitor card  
-- **Openclaw URL** — the full URL to embed in the Openclaw panel (e.g. `http://65.21.x.x:3000`)
+PRs welcome. For major changes, open an issue first to discuss.
 
 ---
 
-## Connecting Openclaw (iframe)
+## 📜 License
 
-The Openclaw panel embeds your running Openclaw instance via iframe.
-
-**Requirements:**
-1. Openclaw must be running on your Hetzner VPS
-2. The VPS must allow connections from your MacBook's IP
-3. For best results, proxy through nginx with HTTPS (avoids mixed-content warnings)
-
-**Nginx config snippet for your VPS:**
-```nginx
-server {
-    listen 443 ssl;
-    server_name openclaw.yourdomain.com;
-    
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        add_header X-Frame-Options SAMEORIGIN;
-    }
-}
-```
-
-Or use **Cloudflare Tunnel** for a zero-config HTTPS solution:
-```bash
-cloudflared tunnel --url http://localhost:3000
-```
+MIT — see [LICENSE](./LICENSE).
 
 ---
 
-## Adding More Agents
+## 🙏 Credits
 
-Edit `lib/store.ts` → `defaultNodes` array to add new nodes:
-
-```ts
-{
-  id: 'new-agent',
-  name: 'My Agent',
-  role: 'Task Runner',
-  host: '10.0.0.5',
-  status: 'online',
-  cpu: 15,
-  memory: 30,
-  uptime: '0d 0h 0m',
-  tasks: 0,
-  icon: '🤖',
-  color: 'cyan',
-}
-```
-
----
-
-## Tech Stack
-
-- **Next.js 14** (App Router)
-- **Tailwind CSS** — glassmorphism design system
-- **Framer Motion** — all animations and transitions
-- **Zustand** — global state with localStorage persistence
-- **@anthropic-ai/sdk** — Claude streaming via SSE
-- **Lucide React** — icons
-
----
-
-## Production Build
-
-```bash
-npm run build
-npm start
-```
-
-To keep it running, use `pm2`:
-```bash
-npm i -g pm2
-pm2 start npm --name openclaw-os -- start
-```
-
----
-
-Built for Justin Howard's AI agent infrastructure.
+Built by [Justin Howard](https://github.com/hollystarbug-web). Inspired by Julian Goldie's "Agent OS Framework™" (Ears / Brain / Hands) and built to be shareable with anyone running a similar agentic stack.
