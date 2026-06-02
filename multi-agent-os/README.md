@@ -1,8 +1,8 @@
-# Multi-Agent OS
+# Multi-AgentOS
 
 > A local, beautiful, dopamine-inducing dashboard for orchestrating multiple AI agents across your machines.
 
-Multi-Agent OS is a Next.js 14 app that runs on your Mac, talks to your VPS, your Mac Mini, and your Obsidian vault, and gives you a single dark-mode glass UI for chat, mission control, terminal access, node monitoring, journal, goals, and a vault-backed journal of every conversation.
+Multi-AgentOS is a Next.js 14 app that runs on your Mac, talks to your VPS, your Mac Mini, and your Obsidian vault, and gives you a single dark-mode glass UI for chat, mission control, terminal access, node monitoring, journal, goals, and a vault-backed journal of every conversation.
 
 It ships with **9 pre-configured agents** (Holly, Kryten, Sally, Grim, Oscar, Reggie, Claude, Hermes, Direct), each with its own persona, accent colour, and default model. The persona prompts live in `prompts/<agent>.md` — edit them to make an agent your own.
 
@@ -11,13 +11,13 @@ It ships with **9 pre-configured agents** (Holly, Kryten, Sally, Grim, Oscar, Re
 ## 🚀 Quick Start (one command)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/multi-agent-os/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/Multi-AgentOS/main/install.sh | bash
 ```
 
 This will:
 
 1. Check for Node 20+ (offers help if missing)
-2. Clone the repo to `~/multi-agent-os`
+2. Clone the repo to `~/Multi-AgentOS`
 3. Run `npm install`
 4. Launch the **setup wizard** (interactive) — it auto-detects your OS, finds your Obsidian vault, and asks for the missing pieces
 5. Print `npm run dev` so you can launch
@@ -49,7 +49,7 @@ Everything lives in **one file**: `config.yaml` (created by the setup wizard).
 ```yaml
 vault:
   localPath: "~/Documents/Obsidian"
-  projectDir: "Multi-Agent OS"
+  projectDir: "Multi-AgentOS"
 
 nodes:
   - id: hetzner-vps
@@ -118,7 +118,7 @@ Each agent has:
 
 ## 🗄️ Vault
 
-Multi-Agent OS auto-saves your chats, journal, goals, and missions to an Obsidian vault. The vault must be a regular folder on disk (or accessible over SSH).
+Multi-AgentOS auto-saves your chats, journal, goals, and missions to an Obsidian vault. The vault must be a regular folder on disk (or accessible over SSH).
 
 **Where it writes:**
 
@@ -159,8 +159,8 @@ Each save triggers a `git commit` if the vault is a git repo (recommended).
 ## 🧪 Development
 
 ```bash
-git clone https://github.com/hollystarbug-web/multi-agent-os.git
-cd multi-agent-os
+git clone https://github.com/hollystarbug-web/Multi-AgentOS.git
+cd Multi-AgentOS
 npm install
 npm run setup          # interactive
 npm run dev            # → http://localhost:3000
@@ -180,7 +180,7 @@ Other scripts:
 
 ## 🔄 Updating
 
-Multi-Agent OS uses [Semantic Versioning](https://semver.org/). New versions are tagged on the `main` branch and announced via GitHub releases.
+Multi-AgentOS uses [Semantic Versioning](https://semver.org/). New versions are tagged on the `main` branch and announced via GitHub releases.
 
 | Command | What it does |
 |---|---|
@@ -190,7 +190,7 @@ Multi-Agent OS uses [Semantic Versioning](https://semver.org/). New versions are
 
 **Pin to a specific version at install time:**
 ```bash
-MULTI_AGENT_OS_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/multi-agent-os/main/install.sh | bash
+MULTI_AGENTOS_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/Multi-AgentOS/main/install.sh | bash
 ```
 
 See [CHANGELOG.md](./CHANGELOG.md) for version history.

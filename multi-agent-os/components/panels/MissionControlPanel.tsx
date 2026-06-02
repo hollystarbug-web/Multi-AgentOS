@@ -61,7 +61,7 @@ export default function MissionControlPanel() {
       remotePath: missionsFilePath(),
       content: chunk,
       append: !isFirstMission,
-      commitMessage: `missions: ${mission.title} — Multi-Agent OS`,
+      commitMessage: `missions: ${mission.title} — Multi-AgentOS`,
       host: hetznerHost,
       sshUser: vaultSshUser || 'root',
       sshKeyPath: vaultSshKeyPath || undefined,

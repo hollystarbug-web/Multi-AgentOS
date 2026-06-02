@@ -359,7 +359,7 @@ export const useStore = create<AppState>()(
         })),
     }),
     {
-      name: 'multi-agent-os-state',
+      name: 'multi-agentos-state',
       version: 3,
       migrate: (persistedState: any, version) => {
         // v1 → v2: migrate master 'messages' into agentMessages['agent-claude'].

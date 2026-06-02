@@ -177,7 +177,7 @@ export default function Sidebar() {
           <Sparkles size={13} style={{ color: 'rgba(168,85,247,1)' }} />
         </div>
         <div>
-          <div className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>Multi-Agent OS</div>
+          <div className="text-xs font-bold" style={{ color: 'var(--text-1)' }}>Multi-AgentOS</div>
           <div className="text-[10px]" style={{ color: 'var(--text-4)' }}>v1.0</div>
         </div>
       </div>

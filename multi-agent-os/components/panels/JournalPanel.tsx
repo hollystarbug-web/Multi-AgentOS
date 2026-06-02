@@ -85,7 +85,7 @@ export default function JournalPanel() {
         remotePath: filePath,
         content: chunk,
         append: !isNew,
-        commitMessage: `journal: ${date} entry — Multi-Agent OS`,
+        commitMessage: `journal: ${date} entry — Multi-AgentOS`,
         host: hetznerHost,
         sshUser: vaultSshUser || 'root',
         sshKeyPath: vaultSshKeyPath || undefined,

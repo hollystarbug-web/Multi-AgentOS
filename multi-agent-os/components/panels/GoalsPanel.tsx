@@ -110,7 +110,7 @@ export default function GoalsPanel() {
         remotePath: filePath,
         content: chunk,
         append: !isFirst,
-        commitMessage: `goals: ${date.slice(0, 7)} update — Multi-Agent OS`,
+        commitMessage: `goals: ${date.slice(0, 7)} update — Multi-AgentOS`,
         host: hetznerHost,
         sshUser: vaultSshUser || 'root',
         sshKeyPath: vaultSshKeyPath || undefined,

@@ -23,7 +23,7 @@ export interface CapturedError {
   context?: Record<string, any>
 }
 
-const BUFFER_KEY = 'multi-agent-os-errors'
+const BUFFER_KEY = 'multi-agentos-errors'
 const MAX_ERRORS = 50
 
 function readBuffer(): CapturedError[] {

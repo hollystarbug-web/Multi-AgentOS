@@ -41,14 +41,14 @@ const AgentConfigSchema = z.object({
 
 const ConfigSchema = z.object({
   app: z.object({
-    name: z.string().default('Multi-Agent OS'),
+    name: z.string().default('Multi-AgentOS'),
     port: z.number().int().positive().default(3000),
     accent: z.string().default('cyan'),
   }).default({}),
   vault: z.object({
     enabled: z.boolean().default(true),
     localPath: z.string().default('~/Documents/Obsidian'),
-    projectDir: z.string().default('Multi-Agent OS'),
+    projectDir: z.string().default('Multi-AgentOS'),
     ssh: z.object({
       enabled: z.boolean().default(false),
       host: z.string().default(''),
@@ -88,11 +88,11 @@ export type AgentYamlConfig = z.infer<typeof AgentConfigSchema>
 // ─── Built-in defaults (shipped with the app) ────────────────────────────
 
 const BUILTIN_DEFAULTS: AppConfig = {
-  app: { name: 'Multi-Agent OS', port: 3000, accent: 'cyan' },
+  app: { name: 'Multi-AgentOS', port: 3000, accent: 'cyan' },
   vault: {
     enabled: true,
     localPath: '~/Documents/Obsidian',
-    projectDir: 'Multi-Agent OS',
+    projectDir: 'Multi-AgentOS',
     ssh: { enabled: false, host: '', user: 'root', keyPath: '~/.ssh/id_ed25519', password: '' },
     autoSave: true,
   },

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Multi-Agent OS — one-command install
+# Multi-AgentOS — one-command install
 #
-#   curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/multi-agent-os/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/Multi-AgentOS/main/install.sh | bash
 #
 # What it does:
 #   1. Checks for Node 20+ (offers to install via nvm if missing)
@@ -14,12 +14,12 @@
 
 set -e
 
-REPO="${MULTI_AGENT_OS_REPO:-hollystarbug-web/multi-agent-os}"
-BRANCH="${MULTI_AGENT_OS_BRANCH:-main}"
+REPO="${MULTI_AGENTOS_REPO:-hollystarbug-web/Multi-AgentOS}"
+BRANCH="${MULTI_AGENTOS_BRANCH:-main}"
 # Pin to a specific release tag (e.g. "v0.1.0"). Leave empty for the
 # bleeding edge of `main`. The release script tags new versions.
-VERSION="${MULTI_AGENT_OS_VERSION:-}"
-DIR="${MULTI_AGENT_OS_DIR:-$HOME/multi-agent-os}"
+VERSION="${MULTI_AGENTOS_VERSION:-}"
+DIR="${MULTI_AGENTOS_DIR:-$HOME/Multi-AgentOS}"
 
 # ── Colours ─────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -97,7 +97,7 @@ else
 fi
 
 # ── 5. Done ───────────────────────────────────────────────────────────
-header "🎉 Multi-Agent OS is ready"
+header "🎉 Multi-AgentOS is ready"
 ok "Installed at: $DIR"
 ok "Version:      $(grep '"version"' $DIR/package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')"
 ok "Config:       $DIR/config.yaml"

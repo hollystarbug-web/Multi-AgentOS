@@ -1,4 +1,4 @@
-# Multi-Agent OS — Configuration
+# Multi-AgentOS — Configuration
 # ──────────────────────────────
 # This file is the single source of truth for paths, nodes, agents, models.
 # Copy to `config.yaml` and customise for your setup. The setup wizard does
@@ -12,7 +12,7 @@
 
 # ── App identity ──────────────────────────────────────────────────────────
 app:
-  name: "Multi-Agent OS"           # Display name in TopBar
+  name: "Multi-AgentOS"           # Display name in TopBar
   port: 3000                    # Next.js dev server port
   accent: cyan                  # cyan | violet | pink | green | amber
 
@@ -23,7 +23,7 @@ vault:
   enabled: true
   # Local path: an absolute path on this machine
   localPath: "~/Documents/Obsidian"
-  projectDir: "Multi-Agent OS"     # Subfolder inside the vault
+  projectDir: "Multi-AgentOS"     # Subfolder inside the vault
   # Remote (SSH) — leave empty if vault is local
   ssh:
     enabled: false
