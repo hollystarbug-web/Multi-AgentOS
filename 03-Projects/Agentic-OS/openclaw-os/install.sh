@@ -16,6 +16,9 @@ set -e
 
 REPO="${OPENCLAW_OS_REPO:-hollystarbug-web/openclaw-os}"
 BRANCH="${OPENCLAW_OS_BRANCH:-main}"
+# Pin to a specific release tag (e.g. "v0.1.0"). Leave empty for the
+# bleeding edge of `main`. The release script tags new versions.
+VERSION="${OPENCLAW_OS_VERSION:-}"
 DIR="${OPENCLAW_OS_DIR:-$HOME/openclaw-os}"
 
 # ── Colours ─────────────────────────────────────────────────────────────
@@ -51,12 +54,24 @@ header "Step 2 · Getting the code"
 if [ -d "$DIR" ]; then
   info "Updating existing install at $DIR"
   cd "$DIR"
-  git pull --rebase --autostash origin "$BRANCH" 2>/dev/null || warn "git pull failed (offline? branch mismatch?)"
+  if [ -n "$VERSION" ]; then
+    info "Checking out v$VERSION"
+    git fetch --tags origin
+    git checkout "v$VERSION" 2>/dev/null || warn "tag v$VERSION not found, staying on $(git describe --tags --always)"
+  else
+    git pull --rebase --autostash origin "$BRANCH" 2>/dev/null || warn "git pull failed (offline? branch mismatch?)"
+  fi
 else
   info "Cloning $REPO into $DIR"
   git clone "https://github.com/$REPO.git" "$DIR"
   cd "$DIR"
-  git checkout "$BRANCH" 2>/dev/null || true
+  if [ -n "$VERSION" ]; then
+    info "Checking out v$VERSION"
+    git fetch --tags
+    git checkout "v$VERSION" 2>/dev/null || warn "tag v$VERSION not found, staying on default"
+  else
+    git checkout "$BRANCH" 2>/dev/null || true
+  fi
 fi
 ok "Code ready at $DIR"
 
@@ -84,6 +99,7 @@ fi
 # ── 5. Done ───────────────────────────────────────────────────────────
 header "🎉 OpenClaw OS is ready"
 ok "Installed at: $DIR"
+ok "Version:      $(grep '"version"' $DIR/package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')"
 ok "Config:       $DIR/config.yaml"
 ok "Env:          $DIR/.env.local"
 echo ""
@@ -92,4 +108,9 @@ echo "  cd $DIR && npm run dev"
 echo ""
 info "Then open:  ${BOLD}http://localhost:3000${RESET}"
 echo ""
-info "Re-run setup any time with:  ${BOLD}npm run setup${RESET}"
+info "Useful commands:"
+echo "  npm run setup          # re-run setup wizard"
+echo "  npm run check-update   # see if a newer version is available"
+echo "  npm run update         # pull the latest + reinstall"
+echo "  npm run config:show    # print active config"
+echo "  npm run config:validate# validate config against schema"
