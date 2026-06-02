@@ -153,7 +153,7 @@ All credentials stored in vault at `/root/.openclaw/workspace/.credentials/`:
 
 ### OpenRouter API Key
 
-- **Key:** `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`
+- **Key:** `<REDACTED_OPENROUTER_KEY>`
 - **Account:** Justin's OpenRouter (hollystarbug@gmail.com via Google SSO)
 - **Provides access to:**
   - DeepSeek V4 Flash (free tier — $0.10/M input)
