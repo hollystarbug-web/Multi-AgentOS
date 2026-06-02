@@ -21,7 +21,7 @@ const Dashboard = dynamic(() => import('@/components/Dashboard'), {
       }}
     >
       <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span>
-      INITIALIZING MULTI-AGENT OS…
+      INITIALIZING MULTI-AGENTOS…
     </div>
   ),
 })

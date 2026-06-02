@@ -298,7 +298,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                 >
                   <span>✓</span>
                   <span>
-                    <strong>Local mode</strong> — saving directly to <code className="font-mono">/root/OpenClaw-Wiki/Multi-Agent OS/</code> on this VPS. No SSH needed.
+                    <strong>Local mode</strong> — saving directly to <code className="font-mono">/root/OpenClaw-Wiki/Multi-AgentOS/</code> on this VPS. No SSH needed.
                   </span>
                 </div>
               )}

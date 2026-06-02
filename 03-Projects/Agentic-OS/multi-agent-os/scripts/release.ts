@@ -65,7 +65,7 @@ async function main() {
   const arg = process.argv[2]
   if (!arg) fail('Usage: npm run release -- [patch | minor | major | X.Y.Z]')
 
-  header('Multi-Agent OS — Release')
+  header('Multi-AgentOS — Release')
 
   // ── Clean working tree? ─────────────────────────────────────────────
   const status = run('git status --porcelain', { capture: true })

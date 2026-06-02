@@ -56,7 +56,7 @@ export default function OverviewPanel() {
           <div className="relative flex items-center justify-between">
             <div>
               <div className="text-xs font-semibold tracking-widest mb-2" style={{ color: 'var(--text-3)' }}>
-                MULTI-AGENT OS · MISSION CONTROL
+                MULTI-AGENTOS · MISSION CONTROL
               </div>
               <h1 className="text-3xl font-bold tracking-tight mb-3 gradient-text">
                 All Systems Go

@@ -247,7 +247,7 @@ export default function AgentChatPanel({ agentId }: AgentChatPanelProps) {
             remotePath: chatFilePath(date, agent.name),
             content: chunk,
             append: !isNew,
-            commitMessage: `chat: ${date} — ${agent.name} — Multi-Agent OS`,
+            commitMessage: `chat: ${date} — ${agent.name} — Multi-AgentOS`,
             host: hetznerHost,
             sshUser: vaultSshUser || 'root',
             sshKeyPath: vaultSshKeyPath || undefined,

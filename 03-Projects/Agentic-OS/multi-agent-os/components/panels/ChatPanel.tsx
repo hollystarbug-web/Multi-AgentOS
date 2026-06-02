@@ -152,7 +152,7 @@ export default function ChatPanel() {
             remotePath: chatFilePath(date),
             content: chunk,
             append: !isNew,
-            commitMessage: `chat: ${date} — Multi-Agent OS`,
+            commitMessage: `chat: ${date} — Multi-AgentOS`,
             host: hetznerHost,
             sshUser: vaultSshUser || 'root',
             sshKeyPath: vaultSshKeyPath || undefined,

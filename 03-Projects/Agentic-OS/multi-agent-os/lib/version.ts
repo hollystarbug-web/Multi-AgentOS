@@ -1,5 +1,5 @@
 /**
- * Version constants and helpers for Multi-Agent OS.
+ * Version constants and helpers for Multi-AgentOS.
  *
  * Versioning rules:
  *   - MAJOR.MINOR.PATCH (semver)
@@ -29,7 +29,7 @@ function readVersion(): string {
 }
 
 export const VERSION = readVersion()
-export const REPO    = 'hollystarbug-web/multi-agent-os'
+export const REPO    = 'hollystarbug-web/Multi-AgentOS'
 export const REPO_URL = `https://github.com/${REPO}`
 
 /** Check GitHub for the latest release. Returns null if check fails. */

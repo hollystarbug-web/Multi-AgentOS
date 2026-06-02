@@ -49,11 +49,11 @@ function isGitRepo(): boolean {
 }
 
 async function main() {
-  header(`Update Multi-Agent OS (current: v${VERSION})`)
+  header(`Update Multi-AgentOS (current: v${VERSION})`)
 
   if (!isGitRepo()) {
-    fail(`Not a git repo. Multi-Agent OS must be installed via:
-        curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/multi-agent-os/main/install.sh | bash
+    fail(`Not a git repo. Multi-AgentOS must be installed via:
+        curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/Multi-AgentOS/main/install.sh | bash
         Re-run that to get a proper install, then re-run this update.`)
   }
 

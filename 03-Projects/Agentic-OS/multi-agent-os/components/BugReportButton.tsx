@@ -8,7 +8,7 @@
  * snapshot) so Holly can diagnose without asking follow-up questions.
  *
  * Submits to POST /api/bug-report which writes a vault file:
- *   Multi-Agent OS/Bug Reports/YYYY-MM-DD-HHMM-{slug}.md
+ *   Multi-AgentOS/Bug Reports/YYYY-MM-DD-HHMM-{slug}.md
  *
  * Keyboard shortcut: ⌘K (or Ctrl+K) toggles the modal from anywhere.
  */

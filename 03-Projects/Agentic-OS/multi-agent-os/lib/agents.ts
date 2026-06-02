@@ -52,7 +52,7 @@ function resolveIcon(name: string): LucideIcon {
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-// __dirname is `.../multi-agent-os/lib/`, so project root is one up.
+// __dirname is `.../Multi-AgentOS/lib/`, so project root is one up.
 const PROJECT_ROOT = resolve(__dirname, '..')
 
 function loadPrompt(promptFile: string | undefined, agentId: string): string {
