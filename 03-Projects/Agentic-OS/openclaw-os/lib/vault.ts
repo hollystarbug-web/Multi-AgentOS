@@ -1,19 +1,37 @@
 /**
- * Vault helpers — OpenClaw-Wiki conventions
- *
- * Vault root on Hetzner VPS: /root/OpenClaw-Wiki/
- * Agentic OS folder:         Agentic OS/        (per Justin, 2026-06-01)
+ * Vault helpers — paths come from `config.yaml` (set by the setup wizard).
  *
  * Structure (auto-saved):
- *   Agentic OS/Chats/<agent-slug>/YYYY-MM-DD.md   ← daily chat logs per agent
- *   Agentic OS/Chats/YYYY-MM-DD.md                ← legacy / no-agent
- *   Agentic OS/Journal/YYYY-MM-DD.md              ← daily journal
- *   Agentic OS/Goals/YYYY-MM.md                   ← monthly goals
- *   Agentic OS/Missions.md                        ← rolling mission log
+ *   <vault>/<projectDir>/chats/<agent-slug>/YYYY-MM-DD.md   ← daily chat logs per agent
+ *   <vault>/<projectDir>/chats/YYYY-MM-DD.md                ← legacy / no-agent
+ *   <vault>/<projectDir>/journal/YYYY-MM-DD.md              ← daily journal
+ *   <vault>/<projectDir>/goals/YYYY-MM.md                   ← monthly goals
+ *   <vault>/<projectDir>/missions.md                        ← rolling mission log
+ *
+ * All paths are resolved from `loadConfig()` so the app is portable —
+ * no hardcoded `/root/OpenClaw-Wiki` here. The setup wizard writes the
+ * config; see `config.example.yaml` for the full schema.
  */
 
-export const VAULT_ROOT  = '/root/OpenClaw-Wiki'
-export const PROJECT_DIR = 'Agentic OS'
+import { loadConfig } from './config'
+
+/**
+ * Resolve the active vault root from config. Called at every path-build
+ * so config changes (e.g. via Settings modal → /api/config) take effect
+ * without a server restart.
+ */
+function vaultRoot(): string {
+  return loadConfig().vault.localPath
+}
+
+function projectDir(): string {
+  return loadConfig().vault.projectDir
+}
+
+/** @deprecated Use loadConfig().vault.localPath — kept for backwards compat. */
+export const VAULT_ROOT  = '__read_from_config__'
+/** @deprecated Use loadConfig().vault.projectDir — kept for backwards compat. */
+export const PROJECT_DIR = '__read_from_config__'
 
 // ── Path builders ────────────────────────────────────────────────────────────
 
@@ -22,25 +40,25 @@ export function todayStr(): string {
 }
 
 export function chatFilePath(date = todayStr(), agentName?: string): string {
-  // Per-agent chat files. Falls back to single daily file when no agent.
+  const root = vaultRoot()
+  const proj = projectDir()
   if (agentName) {
     const slug = agentName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    return `${VAULT_ROOT}/${PROJECT_DIR}/chats/${slug}/${date}.md`
+    return `${root}/${proj}/chats/${slug}/${date}.md`
   }
-  return `${VAULT_ROOT}/${PROJECT_DIR}/chats/${date}.md`
+  return `${root}/${proj}/chats/${date}.md`
 }
 
 export function journalFilePath(date = todayStr()): string {
-  return `${VAULT_ROOT}/${PROJECT_DIR}/journal/${date}.md`
+  return `${vaultRoot()}/${projectDir()}/journal/${date}.md`
 }
 
 export function missionsFilePath(): string {
-  return `${VAULT_ROOT}/${PROJECT_DIR}/missions.md`
+  return `${vaultRoot()}/${projectDir()}/missions.md`
 }
 
 export function goalsFilePath(date = todayStr()): string {
-  // YYYY-MM.md — one file per month
-  return `${VAULT_ROOT}/${PROJECT_DIR}/goals/${date.slice(0, 7)}.md`
+  return `${vaultRoot()}/${projectDir()}/goals/${date.slice(0, 7)}.md`
 }
 
 export function goalsFileHeader(date = todayStr()): string {
