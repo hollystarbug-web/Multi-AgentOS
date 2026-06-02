@@ -178,6 +178,25 @@ Other scripts:
 
 ---
 
+## 🔄 Updating
+
+OpenClaw OS uses [Semantic Versioning](https://semver.org/). New versions are tagged on the `main` branch and announced via GitHub releases.
+
+| Command | What it does |
+|---|---|
+| `npm run check-update` | Check if a newer version is on GitHub |
+| `npm run update` | Pull the latest code + reinstall dependencies |
+| `npm run release` | **Maintainer only** — bump version, tag, push |
+
+**Pin to a specific version at install time:**
+```bash
+OPENCLAW_OS_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/openclaw-os/main/install.sh | bash
+```
+
+See [CHANGELOG.md](./CHANGELOG.md) for version history.
+
+---
+
 ## 🤝 Contributing
 
 PRs welcome. For major changes, open an issue first to discuss.
