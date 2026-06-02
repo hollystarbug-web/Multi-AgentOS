@@ -5,6 +5,11 @@ All notable changes to Multi-Agent OS are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Renamed project** from OpenClaw OS to Multi-Agent OS. The product drives Claude, Codex, Ollama, and any local model — not just OpenClaw. Repo, package name, env vars (`MULTI_AGENT_OS_*`), localStorage keys, install URL, and display strings all updated. Directory `openclaw-os/` → `multi-agent-os/` (history preserved via `git mv`).
+
 ## [0.1.0] — 2026-06-02
 
 ### Added
