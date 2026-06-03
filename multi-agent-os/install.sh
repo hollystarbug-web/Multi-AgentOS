@@ -3,6 +3,11 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/Multi-AgentOS/main/install.sh | bash
 #
+# (The above URL points to a top-level shim that downloads and runs
+# THIS file. If you want to call this script directly, use:
+#   curl -fsSL https://raw.githubusercontent.com/hollystarbug-web/Multi-AgentOS/main/multi-agent-os/install.sh | bash
+# Both paths are equivalent.)
+#
 # What it does:
 #   1. Checks for Node 20+ (offers to install via nvm if missing)
 #   2. Clones the repo (or pulls if already cloned)
